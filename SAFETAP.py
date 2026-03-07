@@ -522,7 +522,7 @@ st.markdown("""
 
 # ---- Enhanced Session State ----
 if "registered_users" not in st.session_state:
-    # Initialize with ONLY admin account - no demo users
+    # Initialize with admin and demo users
     st.session_state.registered_users = {
         "admin": {
             "password": "admin123",
@@ -536,6 +536,58 @@ if "registered_users" not in st.session_state:
             "profile_pic": None,
             "status": "active",
             "last_login": "2024-01-01 00:00:00"
+        },
+        "john_doe": {
+            "password": "user123",
+            "name": "John Doe",
+            "email": "john.doe@email.com",
+            "phone": "+63 912 345 6789",
+            "id": "USER001",
+            "authority": "Civilian",
+            "role": "user",
+            "created_at": "2024-01-15",
+            "profile_pic": None,
+            "status": "active",
+            "last_login": "2024-01-15 10:30:00"
+        },
+        "jane_smith": {
+            "password": "user456",
+            "name": "Jane Smith",
+            "email": "jane.smith@email.com",
+            "phone": "+63 923 456 7890",
+            "id": "USER002",
+            "authority": "Civilian",
+            "role": "user",
+            "created_at": "2024-01-20",
+            "profile_pic": None,
+            "status": "active",
+            "last_login": "2024-01-20 14:15:00"
+        },
+        "mike_wilson": {
+            "password": "user789",
+            "name": "Mike Wilson",
+            "email": "mike.wilson@email.com",
+            "phone": "+63 934 567 8901",
+            "id": "USER003",
+            "authority": "Civilian",
+            "role": "user",
+            "created_at": "2024-02-01",
+            "profile_pic": None,
+            "status": "active",
+            "last_login": "2024-02-01 09:45:00"
+        },
+        "sarah_brown": {
+            "password": "sarah123",
+            "name": "Sarah Brown",
+            "email": "sarah.brown@email.com",
+            "phone": "+63 945 678 9012",
+            "id": "USER004",
+            "authority": "Civilian",
+            "role": "user",
+            "created_at": "2024-02-10",
+            "profile_pic": None,
+            "status": "active",
+            "last_login": "2024-02-10 16:20:00"
         }
     }
 
@@ -879,14 +931,23 @@ def show_sidebar():
         </div>
         """, unsafe_allow_html=True)
         
-        # Navigation sections - ONLY admin sections since only admin exists
-        if st.session_state.user and st.session_state.user.get("role") == "admin":
-            sections = [
-                {"icon": "🏠", "name": "Admin Dashboard", "view": "admin_dashboard"},
-                {"icon": "👥", "name": "User Management", "view": "user_management"},
-                {"icon": "📊", "name": "System Analytics", "view": "system_analytics"},
-                {"icon": "⚙️", "name": "System Settings", "view": "system_settings"},
-            ]
+        # Navigation sections based on user role
+        if st.session_state.user:
+            if st.session_state.user.get("role") == "admin":
+                sections = [
+                    {"icon": "🏠", "name": "Admin Dashboard", "view": "admin_dashboard"},
+                    {"icon": "👥", "name": "User Management", "view": "user_management"},
+                    {"icon": "📊", "name": "System Analytics", "view": "system_analytics"},
+                    {"icon": "⚙️", "name": "System Settings", "view": "system_settings"},
+                ]
+            else:  # Regular user
+                sections = [
+                    {"icon": "🏠", "name": "Home", "view": "main"},
+                    {"icon": "👤", "name": "Profile", "view": "profile"},
+                    {"icon": "📍", "name": "Location", "view": "location"},
+                    {"icon": "📚", "name": "History", "view": "history"},
+                    {"icon": "⚙️", "name": "Settings", "view": "settings"},
+                ]
             
             for section in sections:
                 is_active = st.session_state.view == section["view"]
@@ -905,19 +966,21 @@ def show_sidebar():
             st.markdown("---")
             
             # User info section in sidebar
-            st.markdown("""
+            role_text = "Admin Info" if st.session_state.user.get("role") == "admin" else "User Info"
+            st.markdown(f"""
             <div class="sidebar-user-info">
                 <div style="text-align: center; margin-bottom: 1rem;">
-                    <h4 style="margin: 0;">👋 Admin Info</h4>
+                    <h4 style="margin: 0;">👋 {role_text}</h4>
                 </div>
             </div>
             """, unsafe_allow_html=True)
             
             # Display user information in organized format
             user_info_items = [
+                ("Name", st.session_state.user['name']),
                 ("Authority", st.session_state.user['authority']),
-                ("Status", "🟢 Online & Active"),
-                ("Role", "Administrator"),
+                ("Status", "🟢 Online"),
+                ("Role", st.session_state.user.get('role', 'user').title()),
                 ("User ID", st.session_state.user['id'])
             ]
             
@@ -1755,7 +1818,7 @@ def show_system_settings():
                 st.session_state.admin_settings["system_status"] = "offline"
                 st.error("🚨 System has been shut down for emergency maintenance")
 
-# ---- Simplified Login View ----
+# ---- Enhanced Login View with Demo Accounts ----
 def show_login():
     # Hide sidebar for login page
     st.markdown("""
@@ -1778,28 +1841,49 @@ def show_login():
         with tab1:
             st.markdown('### 🔐 Account Login')
             
+            # Role selection for login
+            role = st.radio("Select Account Type", ["User", "Admin"], horizontal=True)
+            
             username = st.text_input("👤 Username", placeholder="Enter your username")
             password = st.text_input("🔒 Password", type="password", placeholder="Enter your password")
             
-            # Removed the admin credentials reminder
+            # Demo credentials based on role
+            if role == "Admin":
+                st.info("""
+                **Admin Demo Account:**
+                - **Username:** admin
+                - **Password:** admin123
+                """)
+            else:
+                st.info("""
+                **User Demo Accounts:**
+                - **Username:** john_doe | **Password:** user123
+                - **Username:** jane_smith | **Password:** user456
+                - **Username:** mike_wilson | **Password:** user789
+                - **Username:** sarah_brown | **Password:** sarah123
+                """)
             
             if st.button("🚀 Sign In", use_container_width=True):
                 if username and password:
                     authenticated, user_data = authenticate_user(username, password)
                     if authenticated:
-                        # Check if role matches (only admin exists)
-                        if user_data.get("role") == "admin":
+                        # Check if role matches selection
+                        expected_role = "admin" if role == "Admin" else "user"
+                        if user_data.get("role") == expected_role:
                             st.session_state.user = user_data
                             st.session_state.user["username"] = username
                             
-                            # Set to admin dashboard
-                            st.session_state.view = "admin_dashboard"
+                            # Set view based on role
+                            if user_data.get("role") == "admin":
+                                st.session_state.view = "admin_dashboard"
+                            else:
+                                st.session_state.view = "main"
                             
                             st.success(f"✅ Welcome back, {user_data['name']}!")
                             time.sleep(1)
                             st.rerun()
                         else:
-                            st.error(f"❌ This account is not authorized as Admin")
+                            st.error(f"❌ This account is not registered as {role}")
                     else:
                         st.error("❌ Invalid username or password")
                 else:
