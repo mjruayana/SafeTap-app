@@ -535,7 +535,9 @@ if "registered_users" not in st.session_state:
             "created_at": "2024-01-01",
             "profile_pic": None,
             "status": "active",
-            "last_login": "2024-01-01 00:00:00"
+            "last_login": "2024-01-01 00:00:00",
+            "current_location": {"lat": 14.5995, "lng": 120.9842, "timestamp": "2024-01-01 00:00:00", "source": "initial"},
+            "location_history": []
         },
         "john_doe": {
             "password": "user123",
@@ -548,7 +550,9 @@ if "registered_users" not in st.session_state:
             "created_at": "2024-01-15",
             "profile_pic": None,
             "status": "active",
-            "last_login": "2024-01-15 10:30:00"
+            "last_login": "2024-01-15 10:30:00",
+            "current_location": {"lat": 14.5895, "lng": 120.9742, "timestamp": "2024-01-15 10:30:00", "source": "initial"},
+            "location_history": []
         },
         "jane_smith": {
             "password": "user456",
@@ -561,7 +565,9 @@ if "registered_users" not in st.session_state:
             "created_at": "2024-01-20",
             "profile_pic": None,
             "status": "active",
-            "last_login": "2024-01-20 14:15:00"
+            "last_login": "2024-01-20 14:15:00",
+            "current_location": {"lat": 14.6095, "lng": 120.9942, "timestamp": "2024-01-20 14:15:00", "source": "initial"},
+            "location_history": []
         },
         "mike_wilson": {
             "password": "user789",
@@ -574,7 +580,9 @@ if "registered_users" not in st.session_state:
             "created_at": "2024-02-01",
             "profile_pic": None,
             "status": "active",
-            "last_login": "2024-02-01 09:45:00"
+            "last_login": "2024-02-01 09:45:00",
+            "current_location": {"lat": 14.5795, "lng": 120.9642, "timestamp": "2024-02-01 09:45:00", "source": "initial"},
+            "location_history": []
         },
         "sarah_brown": {
             "password": "sarah123",
@@ -587,7 +595,9 @@ if "registered_users" not in st.session_state:
             "created_at": "2024-02-10",
             "profile_pic": None,
             "status": "active",
-            "last_login": "2024-02-10 16:20:00"
+            "last_login": "2024-02-10 16:20:00",
+            "current_location": {"lat": 14.6195, "lng": 120.9742, "timestamp": "2024-02-10 16:20:00", "source": "initial"},
+            "location_history": []
         }
     }
 
@@ -622,6 +632,8 @@ if "settings" not in st.session_state:
     }
 if "sidebar_collapsed" not in st.session_state:
     st.session_state.sidebar_collapsed = False
+if "map_click_location" not in st.session_state:
+    st.session_state.map_click_location = None
 
 # ---- NEW: Enhanced Emergency Features ----
 if "emergency_type" not in st.session_state:
@@ -652,7 +664,8 @@ if "admin_settings" not in st.session_state:
         "data_retention_days": 90,
         "max_users": 1000,
         "alert_cooldown": 300,
-        "system_status": "operational"
+        "system_status": "operational",
+        "location_update_interval": 30  # seconds
     }
 
 # ---- Enhanced Emergency Protocols ----
@@ -713,14 +726,56 @@ def add_history(event_type, title, details):
 
 def log_panic_event(username, emergency_type, location):
     """Log panic button usage for admin tracking"""
+    user_name = st.session_state.registered_users[username]["name"] if username in st.session_state.registered_users else username
     event = {
         "username": username,
+        "user_name": user_name,
         "emergency_type": emergency_type,
         "location": location,
         "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "date": datetime.datetime.now().strftime("%B %d, %Y - %H:%M")
     }
     st.session_state.panic_events.insert(0, event)
+
+def update_user_location(username, lat, lng, source="manual"):
+    """Update user's current location and add to history"""
+    if username in st.session_state.registered_users:
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Save to location history
+        location_entry = {
+            "lat": lat,
+            "lng": lng,
+            "timestamp": timestamp,
+            "source": source
+        }
+        
+        if "location_history" not in st.session_state.registered_users[username]:
+            st.session_state.registered_users[username]["location_history"] = []
+        
+        st.session_state.registered_users[username]["location_history"].insert(0, location_entry)
+        
+        # Update current location
+        st.session_state.registered_users[username]["current_location"] = {
+            "lat": lat,
+            "lng": lng,
+            "timestamp": timestamp,
+            "source": source
+        }
+        
+        # Add to system history
+        add_history("location", f"Location Updated - {username}", 
+                   f"New location: {lat:.6f}, {lng:.6f} via {source}")
+        
+        return True
+    return False
+
+def get_user_location(username):
+    """Get user's current location"""
+    if username in st.session_state.registered_users:
+        return st.session_state.registered_users[username].get("current_location", 
+                                                              {"lat": 14.5995, "lng": 120.9842, "timestamp": "Unknown", "source": "unknown"})
+    return {"lat": 14.5995, "lng": 120.9842, "timestamp": "Unknown", "source": "unknown"}
 
 def start_panic_timer():
     """Start the panic button timer"""
@@ -746,6 +801,13 @@ def cancel_panic():
 def send_enhanced_emergency_alert():
     """Send enhanced emergency alert with type-specific messaging"""
     protocol = EMERGENCY_PROTOCOLS[st.session_state.emergency_type]
+    
+    # Update user's current location with panic source
+    if st.session_state.user:
+        update_user_location(st.session_state.user["username"], 
+                           st.session_state.location["lat"], 
+                           st.session_state.location["lng"],
+                           source="panic_alert")
     
     # Log the panic event for admin tracking
     if st.session_state.user:
@@ -786,6 +848,7 @@ def register_user(username, password, name, email, phone, authority="Civilian", 
     if username in st.session_state.registered_users:
         return False, "Username already exists"
     
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     st.session_state.registered_users[username] = {
         "password": password,
         "name": name,
@@ -797,7 +860,9 @@ def register_user(username, password, name, email, phone, authority="Civilian", 
         "created_at": datetime.datetime.now().strftime("%Y-%m-%d"),
         "profile_pic": None,
         "status": "active",
-        "last_login": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "last_login": timestamp,
+        "current_location": {"lat": 14.5995, "lng": 120.9842, "timestamp": timestamp, "source": "registration"},
+        "location_history": []
     }
     return True, "User registered successfully"
 
@@ -839,6 +904,20 @@ def get_system_stats():
         e_type = event["emergency_type"]
         emergency_types[e_type] = emergency_types.get(e_type, 0) + 1
     
+    # Users with active emergencies
+    users_in_emergency = len(set([e["username"] for e in st.session_state.panic_events 
+                                if e["timestamp"].startswith(datetime.datetime.now().strftime("%Y-%m-%d"))]))
+    
+    # Users with recent location updates (last 5 minutes)
+    recent_location_users = 0
+    five_min_ago = (datetime.datetime.now() - datetime.timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M:%S")
+    for user in st.session_state.registered_users.values():
+        if user.get("role") == "admin":
+            continue
+        loc = user.get("current_location", {})
+        if loc.get("timestamp", "") >= five_min_ago:
+            recent_location_users += 1
+    
     return {
         "total_users": total_users,
         "active_users": active_users,
@@ -846,7 +925,9 @@ def get_system_stats():
         "today_emergencies": today_emergencies,
         "emergency_types": emergency_types,
         "system_uptime": "99.8%",
-        "response_time": "4.2s"
+        "response_time": "4.2s",
+        "users_in_emergency": users_in_emergency,
+        "recent_location_users": recent_location_users
     }
 
 def generate_emergency_analytics():
@@ -893,6 +974,10 @@ def create_user_report():
     """Create a comprehensive user report"""
     users_data = []
     for username, user_data in st.session_state.registered_users.items():
+        location = user_data.get('current_location', {})
+        location_str = f"{location.get('lat', 'N/A')}, {location.get('lng', 'N/A')}"
+        location_time = location.get('timestamp', 'Never')
+        
         users_data.append({
             "User ID": user_data["id"],
             "Username": username,
@@ -903,7 +988,9 @@ def create_user_report():
             "Role": user_data["role"],
             "Status": user_data.get("status", "active"),
             "Created At": user_data["created_at"],
-            "Last Login": user_data.get("last_login", "Never")
+            "Last Login": user_data.get("last_login", "Never"),
+            "Current Location": location_str,
+            "Location Updated": location_time
         })
     return pd.DataFrame(users_data)
 
@@ -913,13 +1000,159 @@ def create_emergency_report():
     for event in st.session_state.panic_events:
         emergencies_data.append({
             "Username": event["username"],
+            "User Name": event.get("user_name", event["username"]),
             "Emergency Type": event["emergency_type"],
             "Timestamp": event["timestamp"],
             "Date": event["date"],
             "Latitude": event["location"]["lat"],
-            "Longitude": event["location"]["lng"]
+            "Longitude": event["location"]["lng"],
+            "Status": "Active" if event["timestamp"].startswith(datetime.datetime.now().strftime("%Y-%m-%d")) else "Resolved"
         })
     return pd.DataFrame(emergencies_data)
+
+def create_live_tracking_map():
+    """Create a folium map with all users' real-time locations"""
+    # Center map on average of all locations or default
+    locations = []
+    for username, user_data in st.session_state.registered_users.items():
+        if user_data.get("role") != "admin" and user_data.get("current_location"):  # Exclude admin from tracking
+            loc = user_data["current_location"]
+            if isinstance(loc, dict) and "lat" in loc and "lng" in loc:
+                locations.append((loc["lat"], loc["lng"]))
+    
+    if locations:
+        avg_lat = sum([loc[0] for loc in locations]) / len(locations)
+        avg_lng = sum([loc[1] for loc in locations]) / len(locations)
+    else:
+        avg_lat, avg_lng = 14.5995, 120.9842
+    
+    # Create map
+    m = folium.Map(location=[avg_lat, avg_lng], zoom_start=13)
+    
+    # Add tile layers
+    folium.TileLayer('OpenStreetMap').add_to(m)
+    folium.TileLayer('CartoDB positron', name='Light Map').add_to(m)
+    folium.TileLayer('CartoDB dark_matter', name='Dark Map').add_to(m)
+    
+    # Add markers for each user
+    for username, user_data in st.session_state.registered_users.items():
+        if user_data.get("role") == "admin":  # Skip admin
+            continue
+            
+        location = user_data.get("current_location")
+        if not location or not isinstance(location, dict):
+            continue
+            
+        lat = location.get("lat")
+        lng = location.get("lng")
+        timestamp = location.get("timestamp", "Unknown")
+        source = location.get("source", "unknown")
+        
+        if lat is None or lng is None:
+            continue
+        
+        # Check if location is recent (last 30 minutes)
+        try:
+            loc_time = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+            time_diff = (datetime.datetime.now() - loc_time).total_seconds() / 60
+            is_recent = time_diff < 30
+        except:
+            is_recent = False
+        
+        # Determine marker color based on status and recency
+        if user_data.get("status") == "active" and is_recent:
+            color = "green"
+            status_icon = "🟢"
+        elif user_data.get("status") == "active":
+            color = "orange"
+            status_icon = "🟡"
+        else:
+            color = "gray"
+            status_icon = "⚪"
+        
+        # Check if user has active emergency
+        has_emergency = False
+        for event in st.session_state.panic_events:
+            if event["username"] == username and event["timestamp"].startswith(datetime.datetime.now().strftime("%Y-%m-%d")):
+                has_emergency = True
+                color = "red"
+                status_icon = "🔴"
+                break
+        
+        # Create popup text
+        popup_text = f"""
+        <div style="font-family: Arial; min-width: 250px;">
+            <h4 style="margin: 0 0 10px 0; color: #333;">{user_data['name']}</h4>
+            <p style="margin: 5px 0;"><b>Username:</b> {username}</p>
+            <p style="margin: 5px 0;"><b>Status:</b> {status_icon} {user_data.get('status', 'active').title()}</p>
+            <p style="margin: 5px 0;"><b>Location:</b> {lat:.6f}, {lng:.6f}</p>
+            <p style="margin: 5px 0;"><b>Updated:</b> {timestamp}</p>
+            <p style="margin: 5px 0;"><b>Source:</b> {source.replace('_', ' ').title()}</p>
+            <p style="margin: 5px 0;"><b>Phone:</b> {user_data['phone']}</p>
+            <p style="margin: 5px 0;"><b>Email:</b> {user_data['email']}</p>
+            <hr style="margin: 10px 0;">
+            <div style="display: flex; gap: 5px;">
+                <a href="https://www.google.com/maps?q={lat},{lng}" target="_blank" style="background: #4285F4; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px;">📍 Open in Maps</a>
+            </div>
+        </div>
+        """
+        
+        # Choose icon based on user role and emergency status
+        if has_emergency:
+            icon = folium.Icon(color="red", icon="exclamation-triangle", prefix="fa")
+        elif user_data.get("role") == "admin":
+            icon = folium.Icon(color="darkblue", icon="user-shield", prefix="fa")
+        else:
+            icon = folium.Icon(color=color, icon="user", prefix="fa")
+        
+        # Add marker
+        folium.Marker(
+            [lat, lng],
+            popup=folium.Popup(popup_text, max_width=300),
+            tooltip=f"{user_data['name']} - {status_icon}",
+            icon=icon
+        ).add_to(m)
+        
+        # Add circle for active emergencies
+        if has_emergency:
+            folium.Circle(
+                [lat, lng],
+                radius=300,
+                popup="Emergency Zone",
+                color="red",
+                fill=True,
+                fillColor="red",
+                fillOpacity=0.2
+            ).add_to(m)
+    
+    # Add click functionality to get coordinates
+    m.add_child(folium.LatLngPopup())
+    
+    # Add layer control
+    folium.LayerControl().add_to(m)
+    
+    return m
+
+def get_active_emergencies():
+    """Get currently active emergencies"""
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    active = []
+    for event in st.session_state.panic_events:
+        if event["timestamp"].startswith(today):
+            active.append(event)
+    return active
+
+def simulate_user_location_update():
+    """Simulate random location updates for demo users"""
+    if random.random() < 0.3:  # 30% chance to update a random user's location
+        users = [u for u in st.session_state.registered_users.keys() if u != "admin"]
+        if users:
+            random_user = random.choice(users)
+            # Slight random movement
+            current_loc = st.session_state.registered_users[random_user].get("current_location", {})
+            lat = current_loc.get("lat", 14.5995) + random.uniform(-0.005, 0.005)
+            lng = current_loc.get("lng", 120.9842) + random.uniform(-0.005, 0.005)
+            update_user_location(random_user, lat, lng, source="auto_simulated")
 
 # ---- Enhanced Sidebar with User Info ----
 def show_sidebar():
@@ -936,6 +1169,7 @@ def show_sidebar():
             if st.session_state.user.get("role") == "admin":
                 sections = [
                     {"icon": "🏠", "name": "Admin Dashboard", "view": "admin_dashboard"},
+                    {"icon": "🗺️", "name": "Live Tracking Map", "view": "live_tracking"},
                     {"icon": "👥", "name": "User Management", "view": "user_management"},
                     {"icon": "📊", "name": "System Analytics", "view": "system_analytics"},
                     {"icon": "⚙️", "name": "System Settings", "view": "system_settings"},
@@ -944,7 +1178,7 @@ def show_sidebar():
                 sections = [
                     {"icon": "🏠", "name": "Home", "view": "main"},
                     {"icon": "👤", "name": "Profile", "view": "profile"},
-                    {"icon": "📍", "name": "Location", "view": "location"},
+                    {"icon": "📍", "name": "Pin My Location", "view": "pin_location"},
                     {"icon": "📚", "name": "History", "view": "history"},
                     {"icon": "⚙️", "name": "Settings", "view": "settings"},
                 ]
@@ -1321,6 +1555,266 @@ def show_history():
                 
                 st.divider()
 
+# ---- NEW: Pin Location View for Users ----
+def show_pin_location():
+    st.markdown('<div class="safe-header"><h1>📍 Pin My Location</h1><p>Share your real-time location with admin</p></div>', unsafe_allow_html=True)
+    
+    if not st.session_state.user:
+        st.error("Please login first")
+        return
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.subheader("📍 Pin Your Current Location")
+        st.write("Click on the map to pin your exact location. This will be visible to administrators in real-time.")
+        
+        # Create map for pinning
+        m = folium.Map(
+            location=[st.session_state.location["lat"], st.session_state.location["lng"]],
+            zoom_start=15
+        )
+        
+        # Add click functionality
+        m.add_child(folium.LatLngPopup())
+        
+        # Add marker for current pinned location
+        folium.Marker(
+            [st.session_state.location["lat"], st.session_state.location["lng"]],
+            popup="Your Pinned Location",
+            tooltip="Current Pin",
+            icon=folium.Icon(color="red", icon="map-pin", prefix="fa")
+        ).add_to(m)
+        
+        # Add circle for accuracy
+        folium.Circle(
+            location=[st.session_state.location["lat"], st.session_state.location["lng"]],
+            radius=st.session_state.location["accuracy"],
+            popup="Location Accuracy",
+            color="blue",
+            fill=True,
+            fillColor="blue",
+            fillOpacity=0.1
+        ).add_to(m)
+        
+        # Display the map and capture clicks
+        map_data = st_folium(m, width=700, height=500)
+        
+        # Check if user clicked on map
+        if map_data and "last_clicked" in map_data and map_data["last_clicked"]:
+            clicked_lat = map_data["last_clicked"]["lat"]
+            clicked_lng = map_data["last_clicked"]["lng"]
+            
+            # Update location with clicked coordinates
+            st.session_state.location = {
+                "lat": clicked_lat,
+                "lng": clicked_lng,
+                "accuracy": 10  # High accuracy for manual pin
+            }
+            
+            # Update user's location in database
+            if st.session_state.user:
+                update_user_location(st.session_state.user["username"], clicked_lat, clicked_lng, source="manual_pin")
+            
+            st.success(f"✅ Location pinned at: {clicked_lat:.6f}, {clicked_lng:.6f}")
+            st.rerun()
+    
+    with col2:
+        st.subheader("📍 Current Pin Info")
+        
+        # Display current location info
+        st.info(f"**Latitude:** {st.session_state.location['lat']:.6f}")
+        st.info(f"**Longitude:** {st.session_state.location['lng']:.6f}")
+        st.info(f"**Accuracy:** ±{st.session_state.location['accuracy']} meters")
+        
+        # Get last update time from user data
+        user_loc = get_user_location(st.session_state.user["username"])
+        last_update = user_loc.get("timestamp", "Not yet updated")
+        st.info(f"**Last Updated:** {last_update}")
+        
+        st.subheader("📍 Pin Actions")
+        
+        # Pin current location button
+        if st.button("📍 Pin Current Location", use_container_width=True):
+            update_user_location(st.session_state.user["username"], 
+                               st.session_state.location["lat"], 
+                               st.session_state.location["lng"],
+                               source="manual_button")
+            st.success("✅ Current location pinned and shared with admin!")
+            st.rerun()
+        
+        # Use device location (simulated)
+        if st.button("📱 Use Device Location", use_container_width=True):
+            # Simulate getting device location with slight random variation
+            new_lat = st.session_state.location["lat"] + random.uniform(-0.002, 0.002)
+            new_lng = st.session_state.location["lng"] + random.uniform(-0.002, 0.002)
+            st.session_state.location = {
+                "lat": new_lat,
+                "lng": new_lng,
+                "accuracy": random.randint(5, 20)
+            }
+            update_user_location(st.session_state.user["username"], new_lat, new_lng, source="device_gps")
+            st.success("✅ Device location detected and shared!")
+            st.rerun()
+        
+        # View location history
+        st.subheader("📍 Location History")
+        user_data = st.session_state.registered_users.get(st.session_state.user["username"], {})
+        location_history = user_data.get("location_history", [])
+        
+        if location_history:
+            for entry in location_history[:5]:  # Show last 5 entries
+                st.caption(f"📍 {entry['lat']:.6f}, {entry['lng']:.6f}")
+                st.caption(f"🕐 {entry['timestamp']} via {entry['source']}")
+                st.divider()
+        else:
+            st.info("No location history yet")
+
+# ---- NEW: Live Tracking View for Admin ----
+def show_live_tracking():
+    st.markdown('<div class="safe-header"><h1>🗺️ Live User Tracking</h1><p>Real-time location tracking of all users</p></div>', unsafe_allow_html=True)
+    
+    # Simulate random location updates for demo
+    simulate_user_location_update()
+    
+    # Get statistics
+    total_users = len([u for u in st.session_state.registered_users.values() if u.get("role") != "admin"])
+    active_users = len([u for u in st.session_state.registered_users.values() 
+                       if u.get("role") != "admin" and u.get("status") == "active"])
+    
+    # Get users with recent locations
+    recent_users = 0
+    five_min_ago = (datetime.datetime.now() - datetime.timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M:%S")
+    for user in st.session_state.registered_users.values():
+        if user.get("role") == "admin":
+            continue
+        loc = user.get("current_location", {})
+        if loc.get("timestamp", "") >= five_min_ago:
+            recent_users += 1
+    
+    # Get update interval safely
+    update_interval = st.session_state.admin_settings.get("location_update_interval", 30)
+    
+    # Display metrics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total Users", total_users)
+    with col2:
+        st.metric("Active Users", active_users)
+    with col3:
+        st.metric("Recent Locations", recent_users)
+    with col4:
+        st.metric("Update Interval", f"{update_interval}s")
+    
+    # Map controls
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        if st.button("🔄 Refresh Map", use_container_width=True):
+            st.rerun()
+    with col2:
+        auto_refresh = st.checkbox("Auto-refresh (30s)")
+    with col3:
+        if st.button("📍 Center on All Users", use_container_width=True):
+            st.rerun()
+    with col4:
+        show_history_toggle = st.checkbox("Show Location History")
+    
+    # Auto-refresh logic
+    if auto_refresh:
+        time.sleep(1)
+        st.rerun()
+    
+    # Create and display live tracking map
+    st.subheader("📍 Live User Locations")
+    live_map = create_live_tracking_map()
+    folium_static(live_map, width=1200, height=600)
+    
+    # Map legend
+    st.markdown("""
+    <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 10px; margin: 1rem 0;">
+        <h4>📍 Map Legend</h4>
+        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <div><span style="color: green;">🟢</span> Active User (recent location)</div>
+            <div><span style="color: orange;">🟡</span> Active User (stale location)</div>
+            <div><span style="color: red;">🔴</span> Emergency Active</div>
+            <div><span style="color: gray;">⚪</span> Inactive User</div>
+            <div><span style="color: darkblue;">🔵</span> Admin</div>
+            <div><span>📍</span> Click on markers for details</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # User location list
+    st.subheader("📋 User Location List")
+    
+    # Create DataFrame of user locations
+    location_data = []
+    for username, user_data in st.session_state.registered_users.items():
+        if user_data.get("role") == "admin":
+            continue
+            
+        location = user_data.get("current_location", {})
+        lat = location.get("lat", "N/A")
+        lng = location.get("lng", "N/A")
+        timestamp = location.get("timestamp", "Never")
+        source = location.get("source", "unknown")
+        
+        # Check if user has active emergency
+        has_emergency = False
+        for event in st.session_state.panic_events:
+            if event["username"] == username and event["timestamp"].startswith(datetime.datetime.now().strftime("%Y-%m-%d")):
+                has_emergency = True
+                break
+        
+        status = "🔴 EMERGENCY" if has_emergency else "🟢 Active" if user_data.get("status") == "active" else "⚪ Inactive"
+        
+        location_data.append({
+            "User": user_data["name"],
+            "Username": username,
+            "Status": status,
+            "Latitude": f"{lat:.6f}" if lat != "N/A" else "N/A",
+            "Longitude": f"{lng:.6f}" if lng != "N/A" else "N/A",
+            "Last Update": timestamp,
+            "Source": source.replace("_", " ").title()
+        })
+    
+    if location_data:
+        df = pd.DataFrame(location_data)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+        
+        # Export option
+        csv = df.to_csv(index=False)
+        st.download_button(
+            label="📥 Download Location Report (CSV)",
+            data=csv,
+            file_name=f"user_locations_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            mime="text/csv"
+        )
+    
+    # Location history for selected user
+    if show_history_toggle:
+        st.subheader("📍 Location History")
+        user_list = [u for u in st.session_state.registered_users.keys() if u != "admin"]
+        if user_list:
+            selected_user = st.selectbox("Select user to view history", user_list)
+            
+            if selected_user:
+                user_data = st.session_state.registered_users[selected_user]
+                history = user_data.get("location_history", [])
+                
+                if history:
+                    for entry in history[:20]:  # Show last 20 entries
+                        with st.container():
+                            col1, col2 = st.columns([3, 1])
+                            with col1:
+                                st.write(f"📍 **Location:** {entry['lat']:.6f}, {entry['lng']:.6f}")
+                                st.caption(f"Source: {entry['source'].replace('_', ' ').title()}")
+                            with col2:
+                                st.write(f"🕐 {entry['timestamp']}")
+                            st.divider()
+                else:
+                    st.info("No location history for this user")
+
 def show_location():
     st.markdown('<div class="safe-header"><h1>📍 Location</h1><p>View and manage your location settings</p></div>', unsafe_allow_html=True)
     
@@ -1354,44 +1848,82 @@ def show_location():
             fillOpacity=0.2
         ).add_to(m)
         
+        # Add click functionality
+        m.add_child(folium.LatLngPopup())
+        
         # Display the map
-        folium_static(m, width=700, height=400)
+        map_data = st_folium(m, width=700, height=400)
+        
+        # Check if user clicked on map
+        if map_data and "last_clicked" in map_data and map_data["last_clicked"]:
+            clicked_lat = map_data["last_clicked"]["lat"]
+            clicked_lng = map_data["last_clicked"]["lng"]
+            st.session_state.location = {
+                "lat": clicked_lat,
+                "lng": clicked_lng,
+                "accuracy": 10
+            }
+            if st.session_state.user:
+                update_user_location(st.session_state.user["username"], clicked_lat, clicked_lng, source="map_click")
+            st.success(f"📍 Location updated to: {clicked_lat:.6f}, {clicked_lng:.6f}")
+            st.rerun()
     
     with col2:
         st.subheader("📍 Location Info")
         
-        st.info(f"**Latitude:** {st.session_state.location['lat']}")
-        st.info(f"**Longitude:** {st.session_state.location['lng']}")
+        st.info(f"**Latitude:** {st.session_state.location['lat']:.6f}")
+        st.info(f"**Longitude:** {st.session_state.location['lng']:.6f}")
         st.info(f"**Accuracy:** ±{st.session_state.location['accuracy']} meters")
-        st.info(f"**Last Updated:** {datetime.datetime.now().strftime('%H:%M:%S')}")
+        
+        # Get last update time from user data
+        if st.session_state.user:
+            user_loc = get_user_location(st.session_state.user["username"])
+            last_update = user_loc.get("timestamp", "Not yet updated")
+            st.info(f"**Last Updated:** {last_update}")
         
         st.subheader("📍 Location Actions")
         
         if st.button("🔄 Update Location", use_container_width=True):
             # Simulate location update
+            new_lat = 14.5995 + random.uniform(-0.01, 0.01)
+            new_lng = 120.9842 + random.uniform(-0.01, 0.01)
             st.session_state.location = {
-                "lat": 14.5995 + random.uniform(-0.01, 0.01),
-                "lng": 120.9842 + random.uniform(-0.01, 0.01),
+                "lat": new_lat,
+                "lng": new_lng,
                 "accuracy": random.randint(30, 100)
             }
+            # Update user's location in registered users
+            if st.session_state.user:
+                update_user_location(st.session_state.user["username"], new_lat, new_lng, source="manual_update")
             add_history("location", "Location Updated", "Your location has been refreshed")
             st.success("✅ Location updated successfully!")
             st.rerun()
         
         if st.button("📱 Share Location", use_container_width=True):
+            if st.session_state.user:
+                update_user_location(st.session_state.user["username"], 
+                                   st.session_state.location["lat"], 
+                                   st.session_state.location["lng"],
+                                   source="share")
             add_history("alert", "Location Shared", "Your current location has been shared with emergency contacts")
             st.success("✅ Location shared with emergency contacts!")
         
         if st.button("📍 Save Location", use_container_width=True):
+            if st.session_state.user:
+                update_user_location(st.session_state.user["username"], 
+                                   st.session_state.location["lat"], 
+                                   st.session_state.location["lng"],
+                                   source="save")
             add_history("system", "Location Saved", "Current location saved to history")
             st.success("✅ Location saved to history!")
 
-# ---- NEW: Enhanced Admin Functions ----
+# ---- Admin Dashboard ----
 def show_admin_dashboard():
     st.markdown('<div class="safe-header"><h1>👑 Admin Dashboard</h1><p>System Administration Panel</p></div>', unsafe_allow_html=True)
     
     # Get system statistics
     stats = get_system_stats()
+    active_emergencies = get_active_emergencies()
     
     # Display key metrics
     col1, col2, col3, col4 = st.columns(4)
@@ -1401,9 +1933,75 @@ def show_admin_dashboard():
     with col2:
         st.metric("Total Emergencies", stats["total_emergencies"], f"{stats['today_emergencies']} today")
     with col3:
-        st.metric("System Uptime", stats["system_uptime"])
+        st.metric("Active Now", len(active_emergencies), f"{stats['users_in_emergency']} users")
     with col4:
-        st.metric("Avg Response Time", stats["response_time"])
+        st.metric("Live Locations", stats['recent_location_users'], "last 5 min")
+    
+    # Quick action buttons
+    st.subheader("⚡ Quick Actions")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        if st.button("🗺️ Live Tracking Map", use_container_width=True):
+            st.session_state.view = "live_tracking"
+            st.rerun()
+    
+    with col2:
+        if st.button("📊 Generate Reports", use_container_width=True):
+            st.session_state.view = "system_analytics"
+            st.rerun()
+    
+    with col3:
+        if st.button("👥 User Management", use_container_width=True):
+            st.session_state.view = "user_management"
+            st.rerun()
+    
+    with col4:
+        if st.button("⚙️ System Settings", use_container_width=True):
+            st.session_state.view = "system_settings"
+            st.rerun()
+    
+    # Active emergencies preview
+    if active_emergencies:
+        st.subheader("🚨 Active Emergencies Now")
+        for event in active_emergencies[:5]:  # Show top 5 active emergencies
+            with st.container():
+                col1, col2, col3 = st.columns([2, 2, 1])
+                with col1:
+                    st.write(f"**{event.get('user_name', event['username'])}**")
+                    st.caption(event['emergency_type'].title())
+                with col2:
+                    location = event['location']
+                    st.write(f"📍 {location['lat']:.6f}, {location['lng']:.6f}")
+                with col3:
+                    if st.button(f"View on Map", key=f"view_active_{event['timestamp']}"):
+                        st.session_state.view = "live_tracking"
+                        st.rerun()
+                st.divider()
+    
+    # Recent location updates
+    st.subheader("📍 Recent Location Updates")
+    recent_locations = []
+    for username, user_data in st.session_state.registered_users.items():
+        if user_data.get("role") == "admin":
+            continue
+        loc = user_data.get("current_location", {})
+        if loc and "timestamp" in loc:
+            recent_locations.append({
+                "User": user_data["name"],
+                "Location": f"{loc.get('lat', 'N/A')}, {loc.get('lng', 'N/A')}",
+                "Time": loc.get('timestamp', 'Unknown'),
+                "Source": loc.get('source', 'unknown')
+            })
+    
+    # Sort by timestamp (most recent first)
+    recent_locations.sort(key=lambda x: x["Time"], reverse=True)
+    
+    if recent_locations:
+        for loc in recent_locations[:10]:
+            st.caption(f"👤 {loc['User']} - 📍 {loc['Location']} - 🕐 {loc['Time']} - via {loc['Source']}")
+    else:
+        st.info("No location updates yet")
     
     # Emergency type distribution
     st.subheader("📊 Emergency Type Distribution")
@@ -1416,36 +2014,6 @@ def show_admin_dashboard():
         safe_plotly_chart(fig, use_container_width=True)
     else:
         st.info("No emergency data available yet")
-    
-    # Recent emergency events
-    st.subheader("🚨 Recent Emergency Events")
-    if st.session_state.panic_events:
-        recent_events = st.session_state.panic_events[:10]  # Show last 10 events
-        for event in recent_events:
-            with st.expander(f"{event['timestamp']} - {event['username']} - {event['emergency_type'].title()}"):
-                st.write(f"**Location:** {event['location']['lat']}, {event['location']['lng']}")
-                st.write(f"**Date:** {event['date']}")
-    else:
-        st.info("No emergency events recorded yet")
-    
-    # Quick actions
-    st.subheader("⚡ Quick Actions")
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("📊 Generate Reports", use_container_width=True):
-            st.session_state.view = "system_analytics"
-            st.rerun()
-    
-    with col2:
-        if st.button("👥 User Management", use_container_width=True):
-            st.session_state.view = "user_management"
-            st.rerun()
-    
-    with col3:
-        if st.button("⚙️ System Settings", use_container_width=True):
-            st.session_state.view = "system_settings"
-            st.rerun()
 
 def show_user_management():
     st.markdown('<div class="safe-header"><h1>👥 User Management</h1><p>Manage system users and permissions</p></div>', unsafe_allow_html=True)
@@ -1471,6 +2039,11 @@ def show_user_management():
             if role_filter != "All" and user_data['role'] != role_filter:
                 continue
                 
+            # Get user's current location
+            location = user_data.get('current_location', {})
+            location_str = f"{location.get('lat', 'N/A')}, {location.get('lng', 'N/A')}"
+            location_time = location.get('timestamp', 'Never')
+            
             users_data.append({
                 "Username": username,
                 "Name": user_data['name'],
@@ -1478,6 +2051,8 @@ def show_user_management():
                 "Role": user_data['role'],
                 "Authority": user_data['authority'],
                 "Status": user_data.get('status', 'active'),
+                "Location": location_str,
+                "Last Update": location_time,
                 "Last Login": user_data.get('last_login', 'Never'),
                 "Actions": username
             })
@@ -1492,7 +2067,7 @@ def show_user_management():
             
             if selected_user:
                 user_data = st.session_state.registered_users[selected_user]
-                col1, col2, col3 = st.columns(3)
+                col1, col2, col3, col4 = st.columns(4)
                 
                 with col1:
                     if st.button("🔄 Reset Password", key="reset_pass"):
@@ -1507,6 +2082,11 @@ def show_user_management():
                         st.rerun()
                 
                 with col3:
+                    if st.button("📍 View on Map", key="view_location"):
+                        st.session_state.view = "live_tracking"
+                        st.rerun()
+                
+                with col4:
                     if st.button("🗑️ Delete User", key="delete_user"):
                         if selected_user != st.session_state.user["username"]:
                             del st.session_state.registered_users[selected_user]
@@ -1731,6 +2311,13 @@ def show_system_settings():
                 max_value=10000,
                 value=st.session_state.admin_settings.get("max_users", 1000)
             )
+            
+            st.session_state.admin_settings["location_update_interval"] = st.number_input(
+                "Location Update Interval (seconds)",
+                min_value=5,
+                max_value=300,
+                value=st.session_state.admin_settings.get("location_update_interval", 30)
+            )
         
         with col2:
             st.session_state.admin_settings["auto_backup"] = st.toggle(
@@ -1809,7 +2396,8 @@ def show_system_settings():
                     "data_retention_days": 90,
                     "max_users": 1000,
                     "alert_cooldown": 300,
-                    "system_status": "operational"
+                    "system_status": "operational",
+                    "location_update_interval": 30
                 }
                 st.success("✅ All settings reset to defaults")
         
@@ -1950,8 +2538,12 @@ elif st.session_state.view == "history":
     show_history()
 elif st.session_state.view == "location":
     show_location()
+elif st.session_state.view == "pin_location":
+    show_pin_location()
 elif st.session_state.view == "admin_dashboard":
     show_admin_dashboard()
+elif st.session_state.view == "live_tracking":
+    show_live_tracking()
 elif st.session_state.view == "user_management":
     show_user_management()
 elif st.session_state.view == "system_analytics":
