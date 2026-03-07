@@ -263,7 +263,7 @@ st.markdown("""
         100% { transform: rotate(45deg) translateX(100%); }
     }
     
-    /* Circular Emergency Alert Button */
+    /* Circular Emergency Alert Button - Icon Only */
     .emergency-alert-button {
         width: 240px;
         height: 240px;
@@ -303,23 +303,23 @@ st.markdown("""
     }
     
     .alert-icon {
-        font-size: 3rem;
-        margin-bottom: 0.8rem;
+        font-size: 5rem;
+        margin-bottom: 0.5rem;
     }
     
     .alert-text {
-        font-size: 1.3rem;
+        font-size: 0.9rem;
         font-weight: bold;
         margin-bottom: 0.3rem;
     }
     
     .alert-instruction {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         opacity: 0.9;
         text-align: center;
         font-weight: normal;
         line-height: 1.2;
-        margin-top: 0.5rem;
+        margin-top: 0.3rem;
     }
     
     @keyframes pulse-glow {
@@ -341,6 +341,11 @@ st.markdown("""
         to { 
             background: linear-gradient(135deg, #ff0000, #ff6b6b);
         }
+    }
+    
+    /* Hide the actual Streamlit button */
+    .stButton button[key="panic_btn"] {
+        display: none !important;
     }
     
     /* Enhanced Stats Cards */
@@ -419,11 +424,7 @@ st.markdown("""
         }
         
         .alert-icon {
-            font-size: 2.5rem;
-        }
-        
-        .alert-text {
-            font-size: 1.1rem;
+            font-size: 4rem;
         }
     }
     
@@ -438,15 +439,7 @@ st.markdown("""
         }
         
         .alert-icon {
-            font-size: 2.2rem;
-        }
-        
-        .alert-text {
-            font-size: 1rem;
-        }
-        
-        .alert-instruction {
-            font-size: 0.7rem;
+            font-size: 3.5rem;
         }
     }
 
@@ -529,7 +522,7 @@ st.markdown("""
 
 # ---- Enhanced Session State ----
 if "registered_users" not in st.session_state:
-    # Initialize with default admin and sample users
+    # Initialize with ONLY admin account - no demo users
     st.session_state.registered_users = {
         "admin": {
             "password": "admin123",
@@ -543,45 +536,6 @@ if "registered_users" not in st.session_state:
             "profile_pic": None,
             "status": "active",
             "last_login": "2024-01-01 00:00:00"
-        },
-        "rescue_team": {
-            "password": "rescue123",
-            "name": "Rescue Team Leader",
-            "email": "rescue@safetap.com",
-            "phone": "+63 912 345 6789",
-            "id": "RESCUE001",
-            "authority": "Rescue Team",
-            "role": "rescue",
-            "created_at": "2024-01-15",
-            "profile_pic": None,
-            "status": "active",
-            "last_login": "2024-01-15 00:00:00"
-        },
-        "john_doe": {
-            "password": "user123",
-            "name": "John Doe",
-            "email": "john.doe@example.com",
-            "phone": "+63 912 345 6789",
-            "id": "USER001",
-            "authority": "Civilian",
-            "role": "user",
-            "created_at": "2024-01-15",
-            "profile_pic": None,
-            "status": "active",
-            "last_login": "2024-01-15 00:00:00"
-        },
-        "jane_smith": {
-            "password": "user123",
-            "name": "Jane Smith",
-            "email": "jane.smith@example.com",
-            "phone": "+63 912 345 6790",
-            "id": "USER002",
-            "authority": "Police Officer",
-            "role": "user",
-            "created_at": "2024-01-20",
-            "profile_pic": None,
-            "status": "active",
-            "last_login": "2024-01-20 00:00:00"
         }
     }
 
@@ -599,9 +553,7 @@ if "history" not in st.session_state:
     st.session_state.history = []
 if "contacts" not in st.session_state:
     st.session_state.contacts = [
-        {"name": "Police Department", "number": "+63 912 345 6789", "type": "police", "icon": "👮", "priority": 1},
-        {"name": "BFP Station", "number": "+63 912 345 6790", "type": "bfp", "icon": "🚒", "priority": 1},
-        {"name": "Medical Emergency", "number": "+63 912 345 6791", "type": "medics", "icon": "🚑", "priority": 1},
+        {"name": "Emergency Services", "number": "911", "type": "emergency", "icon": "🚨", "priority": 1},
         {"name": "Family Contact", "number": "+63 912 345 6792", "type": "family", "icon": "👨‍👩‍👧‍👦", "priority": 2}
     ]
 if "settings" not in st.session_state:
@@ -622,8 +574,6 @@ if "sidebar_collapsed" not in st.session_state:
 # ---- NEW: Enhanced Emergency Features ----
 if "emergency_type" not in st.session_state:
     st.session_state.emergency_type = "general"
-if "rescue_type" not in st.session_state:
-    st.session_state.rescue_type = "medical"
 if "safety_timer" not in st.session_state:
     st.session_state.safety_timer = None
 if "fake_call_time" not in st.session_state:
@@ -655,40 +605,40 @@ if "admin_settings" not in st.session_state:
 
 # ---- Enhanced Emergency Protocols ----
 EMERGENCY_PROTOCOLS = {
-    "police": {
-        "icon": "👮",
-        "color": "#3498db",
-        "message": "POLICE EMERGENCY! Need immediate police assistance.",
-        "actions": ["Find safe location", "Call police", "Document details if safe"],
-        "contacts": ["police", "family"],
-        "bg_color": "rgba(52, 152, 219, 0.3)"
+    "emergency": {
+        "icon": "🚨",
+        "color": "#ff6b6b",
+        "message": "EMERGENCY! I need immediate assistance.",
+        "actions": ["Assess situation", "Call emergency services", "Move to safe location"],
+        "contacts": ["all"],
+        "bg_color": "rgba(255, 107, 107, 0.3)"
     },
     "medical": {
         "icon": "🚑",
         "color": "#e74c3c",
         "message": "MEDICAL EMERGENCY! Need immediate medical assistance.",
         "actions": ["Check responsiveness", "Call emergency services", "Provide first aid if trained"],
-        "contacts": ["medics", "family"],
+        "contacts": ["emergency", "family"],
         "bg_color": "rgba(231, 76, 60, 0.3)"
     },
-    "bfp": {
-        "icon": "🚒",
+    "fire": {
+        "icon": "🔥",
         "color": "#e67e22",
-        "message": "BFP EMERGENCY! Need Bureau of Fire Protection assistance.",
-        "actions": ["Evacuate area", "Call BFP", "Use fire extinguifier if safe"],
-        "contacts": ["bfp", "police"],
+        "message": "FIRE EMERGENCY! Need immediate fire department assistance.",
+        "actions": ["Evacuate area", "Call fire department", "Use fire extinguisher if safe"],
+        "contacts": ["emergency", "family"],
         "bg_color": "rgba(230, 126, 34, 0.3)"
     },
-    "natural_disaster": {
-        "icon": "🌪️",
+    "personal_safety": {
+        "icon": "🛡️",
         "color": "#9b59b6",
-        "message": "NATURAL DISASTER! Emergency situation due to natural disaster.",
-        "actions": ["Take cover immediately", "Follow emergency protocols", "Monitor official channels"],
-        "contacts": ["police", "bfp", "medics"],
+        "message": "PERSONAL SAFETY ALERT! I feel unsafe and need assistance.",
+        "actions": ["Find safe location", "Contact emergency services", "Stay on phone"],
+        "contacts": ["emergency", "family"],
         "bg_color": "rgba(155, 89, 182, 0.3)"
     },
     "general": {
-        "icon": "🚨",
+        "icon": "⚠️",
         "color": "#ff6b6b",
         "message": "GENERAL EMERGENCY! I need immediate assistance.",
         "actions": ["Assess situation", "Call emergency services", "Move to safe location"],
@@ -929,7 +879,7 @@ def show_sidebar():
         </div>
         """, unsafe_allow_html=True)
         
-        # Navigation sections
+        # Navigation sections - ONLY admin sections since only admin exists
         if st.session_state.user and st.session_state.user.get("role") == "admin":
             sections = [
                 {"icon": "🏠", "name": "Admin Dashboard", "view": "admin_dashboard"},
@@ -937,78 +887,18 @@ def show_sidebar():
                 {"icon": "📊", "name": "System Analytics", "view": "system_analytics"},
                 {"icon": "⚙️", "name": "System Settings", "view": "system_settings"},
             ]
-        elif st.session_state.user and st.session_state.user.get("role") == "rescue":
-            sections = [
-                {"icon": "🏠", "name": "Rescue Dashboard", "view": "rescue_dashboard"},
-                {"icon": "🚨", "name": "Active Emergencies", "view": "active_emergencies"},
-                {"icon": "👥", "name": "Team Management", "view": "team_management"},
-                {"icon": "📊", "name": "Rescue Analytics", "view": "rescue_analytics"},
-            ]
-        else:
-            sections = [
-                {"icon": "🏠", "name": "Dashboard", "view": "main"},
-                {"icon": "👤", "name": "Profile", "view": "profile"},
-                {"icon": "⚙️", "name": "Settings", "view": "settings"},
-                {"icon": "📚", "name": "History", "view": "history"},
-                {"icon": "📍", "name": "Location", "view": "location"},
-            ]
-        
-        for section in sections:
-            is_active = st.session_state.view == section["view"]
             
-            if st.button(
-                f"{section['icon']} {section['name']}", 
-                key=f"nav_{section['view']}",
-                use_container_width=True,
-                type="primary" if is_active else "secondary"
-            ):
-                st.session_state.view = section["view"]
-                st.rerun()
-        
-        # Emergency Type Selection Section (for regular users only)
-        if st.session_state.user and st.session_state.user.get("role") == "user":
-            st.markdown("---")
-            st.markdown("""
-            <div class="emergency-type-section">
-                <div class="emergency-type-title">🚨 Emergency Type</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Create emergency type options
-            emergency_types = [
-                {"type": "police", "icon": "👮", "label": "Police", "description": "Crime, assault, or law enforcement needed"},
-                {"type": "medical", "icon": "🚑", "label": "Medical", "description": "Health emergency, injury, or medical assistance"},
-                {"type": "bfp", "icon": "🚒", "label": "BFP", "description": "Bureau of Fire Protection emergency"},
-                {"type": "natural_disaster", "icon": "🌪️", "label": "Disaster", "description": "Earthquake, flood, or natural disaster"},
-                {"type": "general", "icon": "🚨", "label": "General", "description": "Other emergencies or unspecified danger"}
-            ]
-            
-            # Display emergency type options in sidebar
-            for emergency in emergency_types:
-                is_active = st.session_state.emergency_type == emergency["type"]
-                button_type = "primary" if is_active else "secondary"
+            for section in sections:
+                is_active = st.session_state.view == section["view"]
                 
                 if st.button(
-                    f"{emergency['icon']} {emergency['label']}", 
-                    key=f"emergency_{emergency['type']}",
+                    f"{section['icon']} {section['name']}", 
+                    key=f"nav_{section['view']}",
                     use_container_width=True,
-                    type=button_type,
-                    help=emergency["description"]
+                    type="primary" if is_active else "secondary"
                 ):
-                    st.session_state.emergency_type = emergency["type"]
+                    st.session_state.view = section["view"]
                     st.rerun()
-            
-            # Show current selection
-            current_protocol = EMERGENCY_PROTOCOLS[st.session_state.emergency_type]
-            st.info(f"**Selected:** {current_protocol['icon']} {st.session_state.emergency_type.title()}")
-        
-        # Add some spacing
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Battery status (only for regular users)
-        if st.session_state.user and st.session_state.user.get("role") == "user":
-            simulate_battery_drain()
-            st.progress(st.session_state.battery_level/100, text=f"🔋 Battery: {st.session_state.battery_level}%")
         
         # User info if logged in
         if st.session_state.user:
@@ -1018,7 +908,7 @@ def show_sidebar():
             st.markdown("""
             <div class="sidebar-user-info">
                 <div style="text-align: center; margin-bottom: 1rem;">
-                    <h4 style="margin: 0;">👋 User Info</h4>
+                    <h4 style="margin: 0;">👋 Admin Info</h4>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -1027,8 +917,8 @@ def show_sidebar():
             user_info_items = [
                 ("Authority", st.session_state.user['authority']),
                 ("Status", "🟢 Online & Active"),
-                ("Battery", f"{st.session_state.battery_level}%"),
-                ("Emergency Type", f"{EMERGENCY_PROTOCOLS[st.session_state.emergency_type]['icon']} {st.session_state.emergency_type.title()}")
+                ("Role", "Administrator"),
+                ("User ID", st.session_state.user['id'])
             ]
             
             for label, value in user_info_items:
@@ -1087,7 +977,7 @@ def show_mini_dashboard():
     </div>
     """.format(alerts_sent, location_updates, contacts_count, st.session_state.battery_level), unsafe_allow_html=True)
 
-# ---- Enhanced Emergency Button Component ----
+# ---- Enhanced Emergency Button Component - Icon Only ----
 def create_emergency_button():
     protocol = EMERGENCY_PROTOCOLS[st.session_state.emergency_type]
     
@@ -1105,32 +995,26 @@ def create_emergency_button():
                 cancel_panic()
                 st.rerun()
     else:
-        # Create the emergency button with proper styling
+        # Create only the alert icon (no text button)
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            # Create a container for the emergency button
-            with st.container():
-                if st.button("", key="panic_btn", help=f"Press and hold for {st.session_state.settings['panic_duration']} seconds to activate {st.session_state.emergency_type} emergency alert"):
-                    start_panic_timer()
-                    st.rerun()
-                
-                # Custom styled emergency button
-                st.markdown(f"""
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                    <div class="emergency-alert-button" onclick="document.querySelector('button[key=\\'panic_btn\\']').click()" 
-                            style="background: linear-gradient(135deg, {protocol['color']}, #ff6b6b);">
-                        <div class="alert-icon">{protocol['icon']}</div>
-                        <div class="alert-text">EMERGENCY</div>
-                        <div style="font-size: 1rem; font-weight: bold; margin-bottom: 0.2rem;">{st.session_state.emergency_type.upper()}</div>
-                        <div class="alert-instruction">Press & Hold for {st.session_state.settings['panic_duration']}s</div>
-                    </div>
+            # Hidden button for functionality
+            st.button("", key="panic_btn", on_click=start_panic_timer)
+            
+            # Custom styled emergency icon only
+            st.markdown(f"""
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; cursor: pointer;" 
+                 onclick="document.querySelector('button[key=\\'panic_btn\\']').click()">
+                <div class="emergency-alert-button" style="background: linear-gradient(135deg, {protocol['color']}, #ff6b6b);">
+                    <div class="alert-icon">{protocol['icon']}</div>
                 </div>
-                <script>
-                document.querySelector('.emergency-alert-button').addEventListener('click', function() {{
-                    document.querySelector('button[key="panic_btn"]').click();
-                }});
-                </script>
-                """, unsafe_allow_html=True)
+            </div>
+            <script>
+            document.querySelector('.emergency-alert-button').addEventListener('click', function() {{
+                document.querySelector('button[key="panic_btn"]').click();
+            }});
+            </script>
+            """, unsafe_allow_html=True)
 
 # ---- Clean Main View with Circular Emergency Button ----
 def show_main():
@@ -1145,10 +1029,10 @@ def show_main():
     # Simple welcome message
     if st.session_state.user:
         st.write(f"### 👋 Welcome, {st.session_state.user['name']}")
-        st.write("Your safety is our priority. Use the emergency button below in case of emergency.")
+        st.write("Your safety is our priority. Tap the alert icon below in case of emergency.")
         st.write("")  # Add some spacing
     
-    # Emergency Alert Button Section
+    # Emergency Alert Icon Section
     create_emergency_button()
     
     # Mini Dashboard
@@ -1230,7 +1114,7 @@ def show_profile():
             with st.form("new_contact"):
                 new_name = st.text_input("Contact Name")
                 new_number = st.text_input("Phone Number")
-                contact_type = st.selectbox("Type", ["Family", "Friend", "Police", "Medical", "Other"])
+                contact_type = st.selectbox("Type", ["Family", "Friend", "Emergency", "Other"])
                 
                 if st.form_submit_button("➕ Add Contact"):
                     if new_name and new_number:
@@ -1514,7 +1398,7 @@ def show_user_management():
         with col1:
             search_term = st.text_input("🔍 Search users by name, email, or username")
         with col2:
-            role_filter = st.selectbox("Filter by Role", ["All", "admin", "rescue", "user"])
+            role_filter = st.selectbox("Filter by Role", ["All", "admin", "user"])
         
         # Display users in a table
         users_data = []
@@ -1584,8 +1468,8 @@ def show_user_management():
             with col2:
                 new_password = st.text_input("Password *", type="password")
                 new_phone = st.text_input("Phone *")
-                new_authority = st.selectbox("Authority", ["Civilian", "Police", "BFP", "Medics", "Rescue Team", "Administrator"])
-                new_role = st.selectbox("Role", ["user", "rescue", "admin"])
+                new_authority = st.selectbox("Authority", ["Civilian", "Administrator"])
+                new_role = st.selectbox("Role", ["user", "admin"])
             
             if st.form_submit_button("➕ Add User"):
                 if all([new_username, new_password, new_name, new_email, new_phone]):
@@ -1871,24 +1755,6 @@ def show_system_settings():
                 st.session_state.admin_settings["system_status"] = "offline"
                 st.error("🚨 System has been shut down for emergency maintenance")
 
-# ---- Placeholder functions for other views ----
-def show_rescue_dashboard():
-    st.markdown('<div class="safe-header"><h1>🚑 Rescue Dashboard</h1><p>Emergency response management</p></div>', unsafe_allow_html=True)
-    st.info("🛠️ Rescue dashboard is under development")
-    st.write("This section will contain active emergency management and rescue team coordination.")
-
-def show_active_emergencies():
-    st.markdown('<div class="safe-header"><h1>🚨 Active Emergencies</h1><p>Current emergency situations</p></div>', unsafe_allow_html=True)
-    st.info("🛠️ Active emergencies view is under development")
-
-def show_team_management():
-    st.markdown('<div class="safe-header"><h1>👥 Team Management</h1><p>Manage rescue team members</p></div>', unsafe_allow_html=True)
-    st.info("🛠️ Team management is under development")
-
-def show_rescue_analytics():
-    st.markdown('<div class="safe-header"><h1>📊 Rescue Analytics</h1><p>Rescue operation statistics</p></div>', unsafe_allow_html=True)
-    st.info("🛠️ Rescue analytics is under development")
-
 # ---- Simplified Login View ----
 def show_login():
     # Hide sidebar for login page
@@ -1912,48 +1778,28 @@ def show_login():
         with tab1:
             st.markdown('### 🔐 Account Login')
             
-            # Role selection for login
-            role = st.selectbox("👤 Login As", ["User", "Rescue Team", "Admin"])
-            
             username = st.text_input("👤 Username", placeholder="Enter your username")
             password = st.text_input("🔒 Password", type="password", placeholder="Enter your password")
             
-            # Demo accounts info
-            st.info("""
-            **Demo Accounts:**
-            - **Admin:** admin / admin123
-            - **Rescue Team:** rescue_team / rescue123  
-            - **User:** john_doe / user123
-            """)
+            # Removed the admin credentials reminder
             
             if st.button("🚀 Sign In", use_container_width=True):
                 if username and password:
                     authenticated, user_data = authenticate_user(username, password)
                     if authenticated:
-                        # Check if role matches
-                        expected_role = "user"
-                        if role == "Admin":
-                            expected_role = "admin"
-                        elif role == "Rescue Team":
-                            expected_role = "rescue"
-                            
-                        if user_data.get("role") == expected_role:
+                        # Check if role matches (only admin exists)
+                        if user_data.get("role") == "admin":
                             st.session_state.user = user_data
                             st.session_state.user["username"] = username
                             
-                            # Set appropriate view based on role
-                            if user_data.get("role") == "admin":
-                                st.session_state.view = "admin_dashboard"
-                            elif user_data.get("role") == "rescue":
-                                st.session_state.view = "rescue_dashboard"
-                            else:
-                                st.session_state.view = "main"
+                            # Set to admin dashboard
+                            st.session_state.view = "admin_dashboard"
                             
                             st.success(f"✅ Welcome back, {user_data['name']}!")
                             time.sleep(1)
                             st.rerun()
                         else:
-                            st.error(f"❌ This account is not authorized as {role}")
+                            st.error(f"❌ This account is not authorized as Admin")
                     else:
                         st.error("❌ Invalid username or password")
                 else:
@@ -1961,6 +1807,7 @@ def show_login():
         
         with tab2:
             st.markdown('### 📝 Create New Account')
+            st.warning("⚠️ New users can only register as regular users. Admin privileges are reserved for system administrators.")
             
             with st.form("register_form"):
                 col1, col2 = st.columns(2)
@@ -1973,12 +1820,10 @@ def show_login():
                     confirm_password = st.text_input("🔒 Confirm Password", type="password", placeholder="Confirm your password")
                     new_phone = st.text_input("📱 Phone", placeholder="+63 XXX XXX XXXX")
                 
-                new_authority = st.selectbox("🏢 Authority", ["Civilian", "Police", "BFP", "Medics", "Rescue Team"])
+                new_authority = st.selectbox("🏢 Authority", ["Civilian"])
                 
-                # Set role based on authority
+                # All new users are regular users
                 role = "user"
-                if new_authority == "Rescue Team":
-                    role = "rescue"
                 
                 if st.form_submit_button("📝 Register Account", use_container_width=True):
                     if all([new_username, new_password, new_name, new_email, new_phone]):
@@ -2029,14 +1874,6 @@ elif st.session_state.view == "system_analytics":
     show_system_analytics()
 elif st.session_state.view == "system_settings":
     show_system_settings()
-elif st.session_state.view == "rescue_dashboard":
-    show_rescue_dashboard()
-elif st.session_state.view == "active_emergencies":
-    show_active_emergencies()
-elif st.session_state.view == "team_management":
-    show_team_management()
-elif st.session_state.view == "rescue_analytics":
-    show_rescue_analytics()
 else:
     # Fallback to main view
     st.session_state.view = "main"
