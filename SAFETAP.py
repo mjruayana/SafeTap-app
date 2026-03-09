@@ -469,6 +469,47 @@ st.markdown("""
     .stProgress > div > div > div {
         background-color: #ffeb3b !important;
     }
+    
+    /* Map container styling */
+    .map-container {
+        border: 2px solid rgba(255,255,255,0.2);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        margin: 1rem 0;
+    }
+    
+    /* Info boxes for location display (replacing maps in user views) */
+    .location-info-box {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        border: 2px solid rgba(255,235,59,0.3);
+        backdrop-filter: blur(10px);
+        margin: 1rem 0;
+    }
+    
+    .location-coordinates {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #ffeb3b;
+        margin: 1rem 0;
+        font-family: monospace;
+    }
+    
+    .location-accuracy {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin: 0.5rem 0;
+    }
+    
+    .location-timestamp {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        margin-top: 1rem;
+        font-style: italic;
+    }
 </style>
 
 <div class="particles" id="particles"></div>
@@ -506,7 +547,7 @@ st.markdown("""
     // Smooth scroll and transition enhancements
     document.addEventListener('DOMContentLoaded', function() {
         // Add smooth fade-in for all content
-        const elements = document.querySelectorAll('.stat-card');
+        const elements = document.querySelectorAll('.stat-card, .location-info-box');
         elements.forEach((el, index) => {
             el.style.opacity = '0';
             el.style.transform = 'translateY(20px)';
@@ -522,7 +563,7 @@ st.markdown("""
 
 # ---- Enhanced Session State ----
 if "registered_users" not in st.session_state:
-    # Initialize with admin and demo users
+    # Initialize with only admin user
     st.session_state.registered_users = {
         "admin": {
             "password": "admin123",
@@ -537,66 +578,6 @@ if "registered_users" not in st.session_state:
             "status": "active",
             "last_login": "2024-01-01 00:00:00",
             "current_location": {"lat": 14.5995, "lng": 120.9842, "timestamp": "2024-01-01 00:00:00", "source": "initial"},
-            "location_history": []
-        },
-        "john_doe": {
-            "password": "user123",
-            "name": "John Doe",
-            "email": "john.doe@email.com",
-            "phone": "+63 912 345 6789",
-            "id": "USER001",
-            "authority": "Civilian",
-            "role": "user",
-            "created_at": "2024-01-15",
-            "profile_pic": None,
-            "status": "active",
-            "last_login": "2024-01-15 10:30:00",
-            "current_location": {"lat": 14.5895, "lng": 120.9742, "timestamp": "2024-01-15 10:30:00", "source": "initial"},
-            "location_history": []
-        },
-        "jane_smith": {
-            "password": "user456",
-            "name": "Jane Smith",
-            "email": "jane.smith@email.com",
-            "phone": "+63 923 456 7890",
-            "id": "USER002",
-            "authority": "Civilian",
-            "role": "user",
-            "created_at": "2024-01-20",
-            "profile_pic": None,
-            "status": "active",
-            "last_login": "2024-01-20 14:15:00",
-            "current_location": {"lat": 14.6095, "lng": 120.9942, "timestamp": "2024-01-20 14:15:00", "source": "initial"},
-            "location_history": []
-        },
-        "mike_wilson": {
-            "password": "user789",
-            "name": "Mike Wilson",
-            "email": "mike.wilson@email.com",
-            "phone": "+63 934 567 8901",
-            "id": "USER003",
-            "authority": "Civilian",
-            "role": "user",
-            "created_at": "2024-02-01",
-            "profile_pic": None,
-            "status": "active",
-            "last_login": "2024-02-01 09:45:00",
-            "current_location": {"lat": 14.5795, "lng": 120.9642, "timestamp": "2024-02-01 09:45:00", "source": "initial"},
-            "location_history": []
-        },
-        "sarah_brown": {
-            "password": "sarah123",
-            "name": "Sarah Brown",
-            "email": "sarah.brown@email.com",
-            "phone": "+63 945 678 9012",
-            "id": "USER004",
-            "authority": "Civilian",
-            "role": "user",
-            "created_at": "2024-02-10",
-            "profile_pic": None,
-            "status": "active",
-            "last_login": "2024-02-10 16:20:00",
-            "current_location": {"lat": 14.6195, "lng": 120.9742, "timestamp": "2024-02-10 16:20:00", "source": "initial"},
             "location_history": []
         }
     }
@@ -1011,7 +992,7 @@ def create_emergency_report():
     return pd.DataFrame(emergencies_data)
 
 def create_live_tracking_map():
-    """Create a folium map with all users' real-time locations"""
+    """Create an enhanced folium map with all users' real-time locations"""
     # Center map on average of all locations or default
     locations = []
     for username, user_data in st.session_state.registered_users.items():
@@ -1026,15 +1007,54 @@ def create_live_tracking_map():
     else:
         avg_lat, avg_lng = 14.5995, 120.9842
     
-    # Create map
-    m = folium.Map(location=[avg_lat, avg_lng], zoom_start=13)
+    # Create enhanced map with multiple tile layers for better visualization
+    m = folium.Map(location=[avg_lat, avg_lng], zoom_start=13, control_scale=True)
     
-    # Add tile layers
-    folium.TileLayer('OpenStreetMap').add_to(m)
-    folium.TileLayer('CartoDB positron', name='Light Map').add_to(m)
-    folium.TileLayer('CartoDB dark_matter', name='Dark Map').add_to(m)
+    # Add multiple tile layers for professional mapping
+    folium.TileLayer(
+        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        name='CartoDB Light',
+        attr='© OpenStreetMap, © CartoDB'
+    ).add_to(m)
     
-    # Add markers for each user
+    folium.TileLayer(
+        'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        name='CartoDB Dark',
+        attr='© OpenStreetMap, © CartoDB'
+    ).add_to(m)
+    
+    folium.TileLayer(
+        'OpenStreetMap',
+        name='OpenStreetMap'
+    ).add_to(m)
+    
+    folium.TileLayer(
+        'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+        name='Google Satellite',
+        attr='Google',
+        max_zoom=20
+    ).add_to(m)
+    
+    folium.TileLayer(
+        'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        name='OpenTopoMap',
+        attr='Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)'
+    ).add_to(m)
+    
+    # Add fullscreen button
+    folium.plugins.Fullscreen().add_to(m)
+    
+    # Add mini map
+    minimap = folium.plugins.MiniMap(toggle_display=True)
+    m.add_child(minimap)
+    
+    # Add mouse position display
+    folium.plugins.MousePosition().add_to(m)
+    
+    # Add measure control
+    folium.plugins.MeasureControl(position='topleft').add_to(m)
+    
+    # Add markers for each user with enhanced styling
     for username, user_data in st.session_state.registered_users.items():
         if user_data.get("role") == "admin":  # Skip admin
             continue
@@ -1079,57 +1099,119 @@ def create_live_tracking_map():
                 status_icon = "🔴"
                 break
         
-        # Create popup text
-        popup_text = f"""
-        <div style="font-family: Arial; min-width: 250px;">
-            <h4 style="margin: 0 0 10px 0; color: #333;">{user_data['name']}</h4>
-            <p style="margin: 5px 0;"><b>Username:</b> {username}</p>
-            <p style="margin: 5px 0;"><b>Status:</b> {status_icon} {user_data.get('status', 'active').title()}</p>
-            <p style="margin: 5px 0;"><b>Location:</b> {lat:.6f}, {lng:.6f}</p>
-            <p style="margin: 5px 0;"><b>Updated:</b> {timestamp}</p>
-            <p style="margin: 5px 0;"><b>Source:</b> {source.replace('_', ' ').title()}</p>
-            <p style="margin: 5px 0;"><b>Phone:</b> {user_data['phone']}</p>
-            <p style="margin: 5px 0;"><b>Email:</b> {user_data['email']}</p>
-            <hr style="margin: 10px 0;">
-            <div style="display: flex; gap: 5px;">
-                <a href="https://www.google.com/maps?q={lat},{lng}" target="_blank" style="background: #4285F4; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px;">📍 Open in Maps</a>
+        # Create enhanced popup with more information
+        popup_html = f"""
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; min-width: 300px; background: white; border-radius: 10px; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 12px;">
+                <h4 style="margin: 0; font-size: 16px;">{user_data['name']}</h4>
+                <p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.9;">{username}</p>
+            </div>
+            <div style="padding: 15px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div>
+                        <div style="color: #666; font-size: 11px;">STATUS</div>
+                        <div style="font-weight: bold; font-size: 14px;">{status_icon} {user_data.get('status', 'active').title()}</div>
+                    </div>
+                    <div>
+                        <div style="color: #666; font-size: 11px;">ROLE</div>
+                        <div style="font-weight: bold; font-size: 14px;">{user_data['role'].title()}</div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <div style="color: #666; font-size: 11px;">CURRENT LOCATION</div>
+                    <div style="font-family: monospace; background: #f5f5f5; padding: 8px; border-radius: 5px; font-size: 12px;">
+                        {lat:.6f}, {lng:.6f}
+                    </div>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <div style="color: #666; font-size: 11px;">LAST UPDATE</div>
+                    <div style="font-size: 12px;">{timestamp}</div>
+                    <div style="font-size: 11px; color: #666;">via {source.replace('_', ' ').title()}</div>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <div style="color: #666; font-size: 11px;">CONTACT</div>
+                    <div style="font-size: 12px;">📞 {user_data['phone']}</div>
+                    <div style="font-size: 12px;">✉️ {user_data['email']}</div>
+                </div>
+                <a href="https://www.google.com/maps?q={lat},{lng}" target="_blank" 
+                   style="display: block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; 
+                          text-align: center; padding: 8px; border-radius: 5px; text-decoration: none; font-size: 12px;">
+                    📍 Open in Google Maps
+                </a>
             </div>
         </div>
         """
         
-        # Choose icon based on user role and emergency status
+        # Choose icon based on user status
         if has_emergency:
-            icon = folium.Icon(color="red", icon="exclamation-triangle", prefix="fa")
-        elif user_data.get("role") == "admin":
-            icon = folium.Icon(color="darkblue", icon="user-shield", prefix="fa")
+            icon = folium.Icon(
+                color="red",
+                icon="exclamation-triangle",
+                prefix="fa",
+                icon_color="white"
+            )
+            # Add pulsing circle for emergency
+            folium.Circle(
+                [lat, lng],
+                radius=200,
+                color="red",
+                weight=2,
+                fill=True,
+                fillColor="red",
+                fillOpacity=0.2,
+                popup="Emergency Zone"
+            ).add_to(m)
+        elif user_data.get("status") == "active":
+            if is_recent:
+                icon = folium.Icon(
+                    color="green",
+                    icon="user-check",
+                    prefix="fa",
+                    icon_color="white"
+                )
+            else:
+                icon = folium.Icon(
+                    color="orange",
+                    icon="user-clock",
+                    prefix="fa",
+                    icon_color="white"
+                )
         else:
-            icon = folium.Icon(color=color, icon="user", prefix="fa")
+            icon = folium.Icon(
+                color="gray",
+                icon="user-slash",
+                prefix="fa",
+                icon_color="white"
+            )
         
-        # Add marker
+        # Add marker with enhanced popup
         folium.Marker(
             [lat, lng],
-            popup=folium.Popup(popup_text, max_width=300),
-            tooltip=f"{user_data['name']} - {status_icon}",
+            popup=folium.Popup(popup_html, max_width=350),
+            tooltip=f"<b>{user_data['name']}</b><br>{status_icon} {user_data.get('status', 'active').title()}",
             icon=icon
         ).add_to(m)
         
-        # Add circle for active emergencies
-        if has_emergency:
-            folium.Circle(
-                [lat, lng],
-                radius=300,
-                popup="Emergency Zone",
-                color="red",
-                fill=True,
-                fillColor="red",
-                fillOpacity=0.2
-            ).add_to(m)
-    
-    # Add click functionality to get coordinates
-    m.add_child(folium.LatLngPopup())
+        # Add circle for location accuracy if available
+        folium.Circle(
+            [lat, lng],
+            radius=50,
+            color=color,
+            weight=1,
+            fill=True,
+            fillColor=color,
+            fillOpacity=0.1
+        ).add_to(m)
     
     # Add layer control
-    folium.LayerControl().add_to(m)
+    folium.LayerControl(position='topright').add_to(m)
+    
+    # Add search feature
+    folium.plugins.Search(
+        layer=m,
+        search_label='name',
+        position='topleft'
+    ).add_to(m)
     
     return m
 
@@ -1178,7 +1260,7 @@ def show_sidebar():
                 sections = [
                     {"icon": "🏠", "name": "Home", "view": "main"},
                     {"icon": "👤", "name": "Profile", "view": "profile"},
-                    {"icon": "📍", "name": "Pin My Location", "view": "pin_location"},
+                    {"icon": "📍", "name": "My Location", "view": "my_location"},
                     {"icon": "📚", "name": "History", "view": "history"},
                     {"icon": "⚙️", "name": "Settings", "view": "settings"},
                 ]
@@ -1555,124 +1637,110 @@ def show_history():
                 
                 st.divider()
 
-# ---- NEW: Pin Location View for Users ----
-def show_pin_location():
-    st.markdown('<div class="safe-header"><h1>📍 Pin My Location</h1><p>Share your real-time location with admin</p></div>', unsafe_allow_html=True)
+# ---- NEW: My Location View for Users (No Map) ----
+def show_my_location():
+    st.markdown('<div class="safe-header"><h1>📍 My Location</h1><p>View and update your current location</p></div>', unsafe_allow_html=True)
     
     if not st.session_state.user:
         st.error("Please login first")
         return
     
-    col1, col2 = st.columns([2, 1])
+    # Get user's current location
+    user_loc = get_user_location(st.session_state.user["username"])
+    
+    # Display location in a styled info box (no map)
+    st.markdown("""
+    <div class="location-info-box">
+        <h2 style="margin:0; color: #ffeb3b;">📍 Current Location</h2>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.subheader("📍 Pin Your Current Location")
-        st.write("Click on the map to pin your exact location. This will be visible to administrators in real-time.")
+        # Location information display
+        st.markdown(f"""
+        <div style="background: rgba(255,255,255,0.1); border-radius: 15px; padding: 2rem; margin: 1rem 0;">
+            <div style="text-align: center;">
+                <div style="font-size: 1.2rem; opacity: 0.8;">Coordinates</div>
+                <div class="location-coordinates">
+                    {st.session_state.location['lat']:.6f}<br>
+                    {st.session_state.location['lng']:.6f}
+                </div>
+                <div class="location-accuracy">
+                    📡 Accuracy: ±{st.session_state.location['accuracy']} meters
+                </div>
+                <div class="location-timestamp">
+                    Last Updated: {user_loc.get('timestamp', 'Not yet updated')}<br>
+                    Source: {user_loc.get('source', 'unknown').replace('_', ' ').title()}
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Create map for pinning
-        m = folium.Map(
-            location=[st.session_state.location["lat"], st.session_state.location["lng"]],
-            zoom_start=15
-        )
-        
-        # Add click functionality
-        m.add_child(folium.LatLngPopup())
-        
-        # Add marker for current pinned location
-        folium.Marker(
-            [st.session_state.location["lat"], st.session_state.location["lng"]],
-            popup="Your Pinned Location",
-            tooltip="Current Pin",
-            icon=folium.Icon(color="red", icon="map-pin", prefix="fa")
-        ).add_to(m)
-        
-        # Add circle for accuracy
-        folium.Circle(
-            location=[st.session_state.location["lat"], st.session_state.location["lng"]],
-            radius=st.session_state.location["accuracy"],
-            popup="Location Accuracy",
-            color="blue",
-            fill=True,
-            fillColor="blue",
-            fillOpacity=0.1
-        ).add_to(m)
-        
-        # Display the map and capture clicks
-        map_data = st_folium(m, width=700, height=500)
-        
-        # Check if user clicked on map
-        if map_data and "last_clicked" in map_data and map_data["last_clicked"]:
-            clicked_lat = map_data["last_clicked"]["lat"]
-            clicked_lng = map_data["last_clicked"]["lng"]
-            
-            # Update location with clicked coordinates
-            st.session_state.location = {
-                "lat": clicked_lat,
-                "lng": clicked_lng,
-                "accuracy": 10  # High accuracy for manual pin
-            }
-            
-            # Update user's location in database
-            if st.session_state.user:
-                update_user_location(st.session_state.user["username"], clicked_lat, clicked_lng, source="manual_pin")
-            
-            st.success(f"✅ Location pinned at: {clicked_lat:.6f}, {clicked_lng:.6f}")
-            st.rerun()
-    
-    with col2:
-        st.subheader("📍 Current Pin Info")
-        
-        # Display current location info
-        st.info(f"**Latitude:** {st.session_state.location['lat']:.6f}")
-        st.info(f"**Longitude:** {st.session_state.location['lng']:.6f}")
-        st.info(f"**Accuracy:** ±{st.session_state.location['accuracy']} meters")
-        
-        # Get last update time from user data
-        user_loc = get_user_location(st.session_state.user["username"])
-        last_update = user_loc.get("timestamp", "Not yet updated")
-        st.info(f"**Last Updated:** {last_update}")
-        
-        st.subheader("📍 Pin Actions")
-        
-        # Pin current location button
-        if st.button("📍 Pin Current Location", use_container_width=True):
-            update_user_location(st.session_state.user["username"], 
-                               st.session_state.location["lat"], 
-                               st.session_state.location["lng"],
-                               source="manual_button")
-            st.success("✅ Current location pinned and shared with admin!")
-            st.rerun()
-        
-        # Use device location (simulated)
-        if st.button("📱 Use Device Location", use_container_width=True):
-            # Simulate getting device location with slight random variation
-            new_lat = st.session_state.location["lat"] + random.uniform(-0.002, 0.002)
-            new_lng = st.session_state.location["lng"] + random.uniform(-0.002, 0.002)
-            st.session_state.location = {
-                "lat": new_lat,
-                "lng": new_lng,
-                "accuracy": random.randint(5, 20)
-            }
-            update_user_location(st.session_state.user["username"], new_lat, new_lng, source="device_gps")
-            st.success("✅ Device location detected and shared!")
-            st.rerun()
-        
-        # View location history
-        st.subheader("📍 Location History")
+        # Location history
+        st.subheader("📍 Recent Location History")
         user_data = st.session_state.registered_users.get(st.session_state.user["username"], {})
         location_history = user_data.get("location_history", [])
         
         if location_history:
             for entry in location_history[:5]:  # Show last 5 entries
-                st.caption(f"📍 {entry['lat']:.6f}, {entry['lng']:.6f}")
-                st.caption(f"🕐 {entry['timestamp']} via {entry['source']}")
-                st.divider()
+                st.markdown(f"""
+                <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 0.8rem; margin: 0.5rem 0;">
+                    <div style="font-family: monospace;">📍 {entry['lat']:.6f}, {entry['lng']:.6f}</div>
+                    <div style="font-size: 0.8rem; opacity: 0.7;">🕐 {entry['timestamp']} via {entry['source'].replace('_', ' ').title()}</div>
+                </div>
+                """, unsafe_allow_html=True)
         else:
             st.info("No location history yet")
+    
+    with col2:
+        st.subheader("📍 Location Actions")
+        
+        # Update location button
+        if st.button("🔄 Update Location", use_container_width=True):
+            # Simulate location update
+            new_lat = st.session_state.location["lat"] + random.uniform(-0.005, 0.005)
+            new_lng = st.session_state.location["lng"] + random.uniform(-0.005, 0.005)
+            st.session_state.location = {
+                "lat": new_lat,
+                "lng": new_lng,
+                "accuracy": random.randint(30, 100)
+            }
+            update_user_location(st.session_state.user["username"], new_lat, new_lng, source="manual_update")
+            st.success("✅ Location updated successfully!")
+            st.rerun()
+        
+        # Share location button
+        if st.button("📱 Share Location", use_container_width=True):
+            update_user_location(st.session_state.user["username"], 
+                               st.session_state.location["lat"], 
+                               st.session_state.location["lng"],
+                               source="share")
+            st.success("✅ Location shared with emergency contacts!")
+        
+        # Save location button
+        if st.button("📍 Save Location", use_container_width=True):
+            update_user_location(st.session_state.user["username"], 
+                               st.session_state.location["lat"], 
+                               st.session_state.location["lng"],
+                               source="save")
+            st.success("✅ Location saved to history!")
+        
+        # Google Maps link
+        st.markdown(f"""
+        <div style="margin-top: 2rem;">
+            <a href="https://www.google.com/maps?q={st.session_state.location['lat']},{st.session_state.location['lng']}" 
+               target="_blank" style="display: block; text-align: center; background: linear-gradient(135deg, #667eea, #764ba2); 
+               color: white; padding: 1rem; border-radius: 10px; text-decoration: none;">
+                📍 Open in Google Maps
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
 
-# ---- NEW: Live Tracking View for Admin ----
+# ---- NEW: Live Tracking View for Admin (Enhanced Map) ----
 def show_live_tracking():
-    st.markdown('<div class="safe-header"><h1>🗺️ Live User Tracking</h1><p>Real-time location tracking of all users</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="safe-header"><h1>🗺️ Live User Tracking</h1><p>Real-time location tracking with enhanced mapping</p></div>', unsafe_allow_html=True)
     
     # Simulate random location updates for demo
     simulate_user_location_update()
@@ -1724,10 +1792,14 @@ def show_live_tracking():
         time.sleep(1)
         st.rerun()
     
-    # Create and display live tracking map
-    st.subheader("📍 Live User Locations")
+    # Create and display enhanced live tracking map
+    st.subheader("📍 Live User Locations - Enhanced Map")
+    
+    # Add map container with styling
+    st.markdown('<div class="map-container">', unsafe_allow_html=True)
     live_map = create_live_tracking_map()
     folium_static(live_map, width=1200, height=600)
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Map legend
     st.markdown("""
@@ -1738,8 +1810,8 @@ def show_live_tracking():
             <div><span style="color: orange;">🟡</span> Active User (stale location)</div>
             <div><span style="color: red;">🔴</span> Emergency Active</div>
             <div><span style="color: gray;">⚪</span> Inactive User</div>
-            <div><span style="color: darkblue;">🔵</span> Admin</div>
             <div><span>📍</span> Click on markers for details</div>
+            <div><span>🗺️</span> Switch map layers using top-right control</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1814,108 +1886,6 @@ def show_live_tracking():
                             st.divider()
                 else:
                     st.info("No location history for this user")
-
-def show_location():
-    st.markdown('<div class="safe-header"><h1>📍 Location</h1><p>View and manage your location settings</p></div>', unsafe_allow_html=True)
-    
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        st.subheader("📍 Current Location")
-        
-        # Create a folium map
-        m = folium.Map(
-            location=[st.session_state.location["lat"], st.session_state.location["lng"]],
-            zoom_start=15
-        )
-        
-        # Add marker for current location
-        folium.Marker(
-            [st.session_state.location["lat"], st.session_state.location["lng"]],
-            popup="Your Current Location",
-            tooltip="SafeTap User",
-            icon=folium.Icon(color="red", icon="user-shield", prefix="fa")
-        ).add_to(m)
-        
-        # Add circle for accuracy
-        folium.Circle(
-            location=[st.session_state.location["lat"], st.session_state.location["lng"]],
-            radius=st.session_state.location["accuracy"],
-            popup="Location Accuracy",
-            color="red",
-            fill=True,
-            fillColor="red",
-            fillOpacity=0.2
-        ).add_to(m)
-        
-        # Add click functionality
-        m.add_child(folium.LatLngPopup())
-        
-        # Display the map
-        map_data = st_folium(m, width=700, height=400)
-        
-        # Check if user clicked on map
-        if map_data and "last_clicked" in map_data and map_data["last_clicked"]:
-            clicked_lat = map_data["last_clicked"]["lat"]
-            clicked_lng = map_data["last_clicked"]["lng"]
-            st.session_state.location = {
-                "lat": clicked_lat,
-                "lng": clicked_lng,
-                "accuracy": 10
-            }
-            if st.session_state.user:
-                update_user_location(st.session_state.user["username"], clicked_lat, clicked_lng, source="map_click")
-            st.success(f"📍 Location updated to: {clicked_lat:.6f}, {clicked_lng:.6f}")
-            st.rerun()
-    
-    with col2:
-        st.subheader("📍 Location Info")
-        
-        st.info(f"**Latitude:** {st.session_state.location['lat']:.6f}")
-        st.info(f"**Longitude:** {st.session_state.location['lng']:.6f}")
-        st.info(f"**Accuracy:** ±{st.session_state.location['accuracy']} meters")
-        
-        # Get last update time from user data
-        if st.session_state.user:
-            user_loc = get_user_location(st.session_state.user["username"])
-            last_update = user_loc.get("timestamp", "Not yet updated")
-            st.info(f"**Last Updated:** {last_update}")
-        
-        st.subheader("📍 Location Actions")
-        
-        if st.button("🔄 Update Location", use_container_width=True):
-            # Simulate location update
-            new_lat = 14.5995 + random.uniform(-0.01, 0.01)
-            new_lng = 120.9842 + random.uniform(-0.01, 0.01)
-            st.session_state.location = {
-                "lat": new_lat,
-                "lng": new_lng,
-                "accuracy": random.randint(30, 100)
-            }
-            # Update user's location in registered users
-            if st.session_state.user:
-                update_user_location(st.session_state.user["username"], new_lat, new_lng, source="manual_update")
-            add_history("location", "Location Updated", "Your location has been refreshed")
-            st.success("✅ Location updated successfully!")
-            st.rerun()
-        
-        if st.button("📱 Share Location", use_container_width=True):
-            if st.session_state.user:
-                update_user_location(st.session_state.user["username"], 
-                                   st.session_state.location["lat"], 
-                                   st.session_state.location["lng"],
-                                   source="share")
-            add_history("alert", "Location Shared", "Your current location has been shared with emergency contacts")
-            st.success("✅ Location shared with emergency contacts!")
-        
-        if st.button("📍 Save Location", use_container_width=True):
-            if st.session_state.user:
-                update_user_location(st.session_state.user["username"], 
-                                   st.session_state.location["lat"], 
-                                   st.session_state.location["lng"],
-                                   source="save")
-            add_history("system", "Location Saved", "Current location saved to history")
-            st.success("✅ Location saved to history!")
 
 # ---- Admin Dashboard ----
 def show_admin_dashboard():
@@ -2406,7 +2376,7 @@ def show_system_settings():
                 st.session_state.admin_settings["system_status"] = "offline"
                 st.error("🚨 System has been shut down for emergency maintenance")
 
-# ---- Enhanced Login View with Demo Accounts ----
+# ---- Updated Login View - Without Demo Accounts ----
 def show_login():
     # Hide sidebar for login page
     st.markdown("""
@@ -2435,20 +2405,16 @@ def show_login():
             username = st.text_input("👤 Username", placeholder="Enter your username")
             password = st.text_input("🔒 Password", type="password", placeholder="Enter your password")
             
-            # Demo credentials based on role
+            # Demo account info removed - only showing admin account
             if role == "Admin":
                 st.info("""
-                **Admin Demo Account:**
+                **Admin Account:**
                 - **Username:** admin
                 - **Password:** admin123
                 """)
             else:
                 st.info("""
-                **User Demo Accounts:**
-                - **Username:** john_doe | **Password:** user123
-                - **Username:** jane_smith | **Password:** user456
-                - **Username:** mike_wilson | **Password:** user789
-                - **Username:** sarah_brown | **Password:** sarah123
+                **Note:** New users need to register first using the Register tab.
                 """)
             
             if st.button("🚀 Sign In", use_container_width=True):
@@ -2536,10 +2502,8 @@ elif st.session_state.view == "settings":
     show_settings()
 elif st.session_state.view == "history":
     show_history()
-elif st.session_state.view == "location":
-    show_location()
-elif st.session_state.view == "pin_location":
-    show_pin_location()
+elif st.session_state.view == "my_location":
+    show_my_location()
 elif st.session_state.view == "admin_dashboard":
     show_admin_dashboard()
 elif st.session_state.view == "live_tracking":
