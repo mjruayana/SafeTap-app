@@ -40,37 +40,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ---- Enhanced Custom CSS with Theme-Aware Text Visibility ----
+# ---- Enhanced Custom CSS with Theme-Aware Text Colors (keeping safe-header and sidebar unchanged) ----
 st.markdown("""
 <style>
-    /* Theme detection and automatic color adaptation */
-    @media (prefers-color-scheme: light) {
-        :root {
-            --text-primary: #000000 !important;
-            --text-secondary: #333333 !important;
-            --text-accent: #1a5f9e !important;
-            --bg-primary: #ffffff !important;
-            --bg-secondary: #f0f2f6 !important;
-            --border-color: #dddddd !important;
-            --card-bg: rgba(255, 255, 255, 0.9) !important;
-            --hover-bg: rgba(0, 0, 0, 0.05) !important;
-        }
-    }
-    
-    @media (prefers-color-scheme: dark) {
-        :root {
-            --text-primary: #ffffff !important;
-            --text-secondary: #cccccc !important;
-            --text-accent: #ffeb3b !important;
-            --bg-primary: #1a1a1a !important;
-            --bg-secondary: #2d2d2d !important;
-            --border-color: #444444 !important;
-            --card-bg: rgba(45, 45, 45, 0.9) !important;
-            --hover-bg: rgba(255, 255, 255, 0.1) !important;
-        }
-    }
-    
-    /* Main background with gradient */
+    /* Main background with gradient - unchanged */
     .main {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
         background-size: 400% 400%;
@@ -78,29 +51,90 @@ st.markdown("""
         min-height: 100vh;
     }
     
-    /* Dynamic text colors for all elements */
-    .main * {
-        color: var(--text-primary) !important;
-        transition: color 0.3s ease;
-    }
-    
-    /* Safe Header - always white text */
-    .safe-header,
-    .safe-header * {
-        color: #ffffff !important;
-    }
-    
-    /* Override for specific elements that need different colors */
-    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, 
-    .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown li,
-    .stMarkdown span, .stMarkdown div {
-        color: var(--text-primary) !important;
-    }
-    
     @keyframes gradientShift {
         0% { background-position: 0% 50% }
         50% { background-position: 100% 50% }
         100% { background-position: 0% 50% }
+    }
+    
+    /* Light mode text colors (only for elements outside safe-header and sidebar) */
+    @media (prefers-color-scheme: light) {
+        /* All main content text - black in light mode */
+        .main :not(.safe-header):not(.safe-header *):not([data-testid="stSidebar"]):not([data-testid="stSidebar"] *) {
+            color: #000000 !important;
+        }
+        
+        /* Secondary text - dark gray in light mode */
+        .main :not(.safe-header):not(.safe-header *):not([data-testid="stSidebar"]):not([data-testid="stSidebar"] *) .stCaption,
+        .main :not(.safe-header):not(.safe-header *):not([data-testid="stSidebar"]):not([data-testid="stSidebar"] *) small,
+        .main :not(.safe-header):not(.safe-header *):not([data-testid="stSidebar"]):not([data-testid="stSidebar"] *) .small {
+            color: #333333 !important;
+        }
+        
+        /* Accent text - blue in light mode */
+        .main :not(.safe-header):not(.safe-header *):not([data-testid="stSidebar"]):not([data-testid="stSidebar"] *) .stMetricValue,
+        .main :not(.safe-header):not(.safe-header *):not([data-testid="stSidebar"]):not([data-testid="stSidebar"] *) [data-testid="stMetricValue"],
+        .main :not(.safe-header):not(.safe-header *):not([data-testid="stSidebar"]):not([data-testid="stSidebar"] *) .stat-value {
+            color: #1a5f9e !important;
+        }
+        
+        /* Input fields - keep readable */
+        .stTextInput input, .stTextArea textarea, .stSelectbox select,
+        .stNumberInput input, .stDateInput input, .stTimeInput input {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+            border: 1px solid #dddddd !important;
+        }
+        
+        /* Placeholder text */
+        .stTextInput input::placeholder, .stTextArea textarea::placeholder {
+            color: #666666 !important;
+        }
+        
+        /* Progress bar */
+        .stProgress > div > div > div {
+            background-color: #1a5f9e !important;
+        }
+    }
+    
+    /* Dark mode text colors (only for elements outside safe-header and sidebar) */
+    @media (prefers-color-scheme: dark) {
+        /* All main content text - white in dark mode */
+        .main :not(.safe-header):not(.safe-header *):not([data-testid="stSidebar"]):not([data-testid="stSidebar"] *) {
+            color: #ffffff !important;
+        }
+        
+        /* Secondary text - light gray in dark mode */
+        .main :not(.safe-header):not(.safe-header *):not([data-testid="stSidebar"]):not([data-testid="stSidebar"] *) .stCaption,
+        .main :not(.safe-header):not(.safe-header *):not([data-testid="stSidebar"]):not([data-testid="stSidebar"] *) small,
+        .main :not(.safe-header):not(.safe-header *):not([data-testid="stSidebar"]):not([data-testid="stSidebar"] *) .small {
+            color: #cccccc !important;
+        }
+        
+        /* Accent text - yellow in dark mode */
+        .main :not(.safe-header):not(.safe-header *):not([data-testid="stSidebar"]):not([data-testid="stSidebar"] *) .stMetricValue,
+        .main :not(.safe-header):not(.safe-header *):not([data-testid="stSidebar"]):not([data-testid="stSidebar"] *) [data-testid="stMetricValue"],
+        .main :not(.safe-header):not(.safe-header *):not([data-testid="stSidebar"]):not([data-testid="stSidebar"] *) .stat-value {
+            color: #ffeb3b !important;
+        }
+        
+        /* Input fields - keep readable */
+        .stTextInput input, .stTextArea textarea, .stSelectbox select,
+        .stNumberInput input, .stDateInput input, .stTimeInput input {
+            color: #ffffff !important;
+            background-color: #333333 !important;
+            border: 1px solid #555555 !important;
+        }
+        
+        /* Placeholder text */
+        .stTextInput input::placeholder, .stTextArea textarea::placeholder {
+            color: #999999 !important;
+        }
+        
+        /* Progress bar */
+        .stProgress > div > div > div {
+            background-color: #ffeb3b !important;
+        }
     }
     
     /* Smooth transitions for all elements */
@@ -134,101 +168,13 @@ st.markdown("""
         100% { transform: translateY(-100px) rotate(360deg) scale(0.5); opacity: 0; }
     }
     
-    /* Input fields - maintain contrast in both modes */
-    .stTextInput input, .stTextArea textarea, .stSelectbox select, .stMultiSelect div {
-        color: #000000 !important;
-        background-color: #ffffff !important;
-        border: 1px solid var(--border-color) !important;
-    }
-    
-    /* Placeholder text */
-    .stTextInput input::placeholder, .stTextArea textarea::placeholder {
-        color: #666666 !important;
-        opacity: 1;
-    }
-    
-    /* Select box options */
-    .stSelectbox div[data-baseweb="select"] span {
-        color: #000000 !important;
-    }
-    
-    /* Dropdown menus */
-    div[data-baseweb="popover"] div {
-        color: #000000 !important;
-    }
-    
-    /* Alert messages - maintain readability */
-    .stAlert {
-        background: var(--card-bg) !important;
-        border: 1px solid var(--border-color) !important;
-        backdrop-filter: blur(10px);
-    }
-    
-    .stAlert * {
-        color: var(--text-primary) !important;
-    }
-    
-    /* Metric labels and values */
-    [data-testid="stMetricLabel"] p {
-        color: var(--text-secondary) !important;
-    }
-    
-    [data-testid="stMetricValue"] {
-        color: var(--text-accent) !important;
-    }
-    
-    [data-testid="stMetricDelta"] {
-        color: var(--text-secondary) !important;
-    }
-    
-    /* Tabs */
-    .stTabs [data-baseweb="tab-list"] button p {
-        color: var(--text-secondary) !important;
-    }
-    
-    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] p {
-        color: var(--text-accent) !important;
-        font-weight: bold;
-    }
-    
-    /* Expander */
-    .streamlit-expanderHeader {
-        color: var(--text-primary) !important;
-        background: var(--card-bg) !important;
-    }
-    
-    /* Radio buttons and checkboxes */
-    .stRadio label, .stCheckbox label {
-        color: var(--text-primary) !important;
-    }
-    
-    /* Slider labels */
-    .stSlider label {
-        color: var(--text-primary) !important;
-    }
-    
-    /* Dataframe - maintain readability */
-    .stDataFrame {
-        color: #000000 !important;
-    }
-    
-    .stDataFrame * {
-        color: #000000 !important;
-    }
-    
-    /* Plotly charts - ensure text visibility */
-    .js-plotly-plot .plotly {
-        background: transparent !important;
-    }
-    
-    /* Sidebar - keep consistent */
+    /* Sidebar - KEEP ORIGINAL DESIGN */
     .css-1d391kg, .css-1lcbmhc, [data-testid="stSidebar"] {
         background: linear-gradient(180deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
         backdrop-filter: blur(10px);
         border-right: 1px solid rgba(255,255,255,0.2);
     }
     
-    /* Sidebar text colors - always white for contrast */
     [data-testid="stSidebar"] * {
         color: #ffffff !important;
     }
@@ -241,7 +187,6 @@ st.markdown("""
         background: linear-gradient(180deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
     }
     
-    /* Sidebar buttons */
     .stSidebar button {
         background: rgba(255,255,255,0.1) !important;
         color: #ffffff !important;
@@ -253,11 +198,6 @@ st.markdown("""
         border-color: #ffeb3b !important;
     }
     
-    .stSidebar button p {
-        color: #ffffff !important;
-    }
-    
-    /* Sidebar sections */
     .sidebar-section {
         padding: 15px 20px;
         margin: 10px 0;
@@ -306,7 +246,6 @@ st.markdown("""
         color: rgba(255,255,255,0.9) !important;
     }
     
-    /* Sidebar User Info */
     .sidebar-user-info {
         background: rgba(255,255,255,0.1);
         border-radius: 15px;
@@ -340,7 +279,44 @@ st.markdown("""
         color: #ffeb3b !important;
     }
     
-    /* Emergency Type Selector */
+    /* Safe Header - KEEP ORIGINAL DESIGN */
+    .safe-header {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        backdrop-filter: blur(15px);
+        color: #ffffff !important;
+        border-radius: 0 0 25px 25px;
+        box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        padding: 3rem 0 2rem 0;
+        text-align: center;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .safe-header h1, .safe-header p {
+        color: #ffffff !important;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .safe-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+        transform: rotate(45deg);
+        animation: shine 3s infinite;
+    }
+    
+    @keyframes shine {
+        0% { transform: rotate(45deg) translateX(-100%); }
+        100% { transform: rotate(45deg) translateX(100%); }
+    }
+    
+    /* Emergency Type Selector in Sidebar - KEEP ORIGINAL */
     .emergency-type-section {
         background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
         border-radius: 15px;
@@ -396,43 +372,7 @@ st.markdown("""
         color: #ffffff !important;
     }
     
-    /* Safe Header - always white text */
-    .safe-header {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        backdrop-filter: blur(15px);
-        border-radius: 0 0 25px 25px;
-        box-shadow: 0 15px 50px rgba(0,0,0,0.3);
-        padding: 3rem 0 2rem 0;
-        text-align: center;
-        margin-bottom: 2rem;
-        position: relative;
-        overflow: hidden;
-        border: 1px solid rgba(255,255,255,0.2);
-    }
-    
-    .safe-header h1, .safe-header p {
-        color: #ffffff !important;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    }
-    
-    .safe-header::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-        transform: rotate(45deg);
-        animation: shine 3s infinite;
-    }
-    
-    @keyframes shine {
-        0% { transform: rotate(45deg) translateX(-100%); }
-        100% { transform: rotate(45deg) translateX(100%); }
-    }
-    
-    /* Circular Emergency Alert Button */
+    /* Circular Emergency Alert Button - KEEP ORIGINAL */
     .emergency-alert-button {
         width: 240px;
         height: 240px;
@@ -467,52 +407,16 @@ st.markdown("""
         transform: scale(0.95);
     }
     
-    .emergency-alert-button-active {
-        animation: alarm 0.8s infinite alternate, pulse-glow 1s infinite alternate;
-    }
-    
     .alert-icon {
         font-size: 5rem;
         margin-bottom: 0.5rem;
         color: #ffffff !important;
     }
     
-    .alert-text {
-        font-size: 0.9rem;
-        font-weight: bold;
-        margin-bottom: 0.3rem;
-        color: #ffffff !important;
-    }
-    
-    .alert-instruction {
-        font-size: 0.7rem;
-        opacity: 0.9;
-        text-align: center;
-        font-weight: normal;
-        line-height: 1.2;
-        margin-top: 0.3rem;
-        color: #ffffff !important;
-    }
-    
     @keyframes pulse-glow {
-        0% { 
-            box-shadow: 0 0 20px 5px rgba(255, 107, 107, 0.6);
-        }
-        50% { 
-            box-shadow: 0 0 30px 15px rgba(255, 107, 107, 0.8);
-        }
-        100% { 
-            box-shadow: 0 0 20px 5px rgba(255, 107, 107, 0.6);
-        }
-    }
-    
-    @keyframes alarm {
-        from { 
-            background: linear-gradient(135deg, #ff6b6b, #ff4757);
-        }
-        to { 
-            background: linear-gradient(135deg, #ff0000, #ff6b6b);
-        }
+        0% { box-shadow: 0 0 20px 5px rgba(255, 107, 107, 0.6); }
+        50% { box-shadow: 0 0 30px 15px rgba(255, 107, 107, 0.8); }
+        100% { box-shadow: 0 0 20px 5px rgba(255, 107, 107, 0.6); }
     }
     
     /* Hide the actual Streamlit button */
@@ -520,7 +424,7 @@ st.markdown("""
         display: none !important;
     }
     
-    /* Stats Cards - with theme-aware colors */
+    /* Stats Cards - transparent background */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -529,52 +433,24 @@ st.markdown("""
     }
     
     .stat-card {
-        background: var(--card-bg);
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
         border-radius: 15px;
         padding: 1.2rem;
         text-align: center;
-        border: 1px solid var(--border-color);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        backdrop-filter: blur(10px);
     }
     
     .stat-card:hover {
         transform: translateY(-8px) scale(1.03);
-        box-shadow: 0 15px 35px var(--border-color);
-        background: var(--card-bg);
-    }
-    
-    .stat-icon {
-        color: var(--text-accent) !important;
-        font-size: 2rem;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
     }
     
     .stat-value {
         font-size: 1.6rem;
         font-weight: bold;
-        color: var(--text-accent) !important;
         margin: 0.5rem 0;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-    
-    .stat-label {
-        font-size: 0.9rem;
-        color: var(--text-secondary) !important;
-        margin-bottom: 0.5rem;
-    }
-    
-    .stat-change {
-        font-size: 0.8rem;
-        font-weight: bold;
-        color: var(--text-secondary) !important;
-    }
-    
-    .change-positive {
-        color: #4CAF50 !important;
-    }
-    
-    .change-neutral {
-        color: var(--text-accent) !important;
     }
     
     /* Dashboard Container */
@@ -583,11 +459,37 @@ st.markdown("""
     }
     
     .dashboard-title {
-        color: var(--text-accent) !important;
         font-size: 1.5rem;
         font-weight: bold;
         margin-bottom: 1rem;
         text-align: center;
+    }
+    
+    /* Location info boxes - transparent background */
+    .location-info-box {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        margin: 1rem 0;
+    }
+    
+    .location-coordinates {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 1rem 0;
+        font-family: monospace;
+    }
+    
+    /* Map container */
+    .map-container {
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        margin: 1rem 0;
     }
     
     /* Mobile Responsive */
@@ -620,130 +522,13 @@ st.markdown("""
             font-size: 3.5rem;
         }
     }
-    
-    /* Map container */
-    .map-container {
-        border: 2px solid var(--border-color);
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 10px 30px var(--border-color);
-        margin: 1rem 0;
-    }
-    
-    /* Location info boxes */
-    .location-info-box {
-        background: var(--card-bg);
-        border-radius: 15px;
-        padding: 2rem;
-        text-align: center;
-        border: 2px solid var(--border-color);
-        backdrop-filter: blur(10px);
-        margin: 1rem 0;
-    }
-    
-    .location-info-box h2 {
-        color: var(--text-accent) !important;
-    }
-    
-    .location-coordinates {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: var(--text-accent) !important;
-        margin: 1rem 0;
-        font-family: monospace;
-    }
-    
-    .location-accuracy {
-        font-size: 1rem;
-        color: var(--text-secondary) !important;
-        margin: 0.5rem 0;
-    }
-    
-    .location-timestamp {
-        font-size: 0.9rem;
-        color: var(--text-secondary) !important;
-        margin-top: 1rem;
-        font-style: italic;
-    }
-    
-    /* Download button */
-    .stDownloadButton button {
-        background: var(--card-bg) !important;
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-color) !important;
-    }
-    
-    .stDownloadButton button:hover {
-        background: var(--hover-bg) !important;
-        border-color: var(--text-accent) !important;
-    }
-    
-    /* Progress bar */
-    .stProgress > div > div > div {
-        background-color: var(--text-accent) !important;
-    }
-    
-    /* Form labels */
-    .stTextInput label, .stTextArea label, .stSelectbox label, .stNumberInput label {
-        color: var(--text-primary) !important;
-        font-weight: 500;
-    }
-    
-    /* Info boxes */
-    .stInfo, .stSuccess, .stWarning, .stError {
-        color: var(--text-primary) !important;
-    }
-    
-    /* Captions and helper text */
-    .stCaption, small, .small {
-        color: var(--text-secondary) !important;
-    }
-    
-    /* Headers */
-    h1:not(.safe-header h1), h2:not(.safe-header h2), h3:not(.safe-header h3), 
-    h4:not(.safe-header h4), h5:not(.safe-header h5), h6:not(.safe-header h6) {
-        color: var(--text-primary) !important;
-    }
 </style>
 
+<div class="particles" id="particles"></div>
 <script>
-    // Theme detection and application
-    function detectTheme() {
-        const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        if (isDarkMode) {
-            document.documentElement.style.setProperty('--text-primary', '#ffffff');
-            document.documentElement.style.setProperty('--text-secondary', '#cccccc');
-            document.documentElement.style.setProperty('--text-accent', '#ffeb3b');
-            document.documentElement.style.setProperty('--bg-primary', '#1a1a1a');
-            document.documentElement.style.setProperty('--bg-secondary', '#2d2d2d');
-            document.documentElement.style.setProperty('--border-color', '#444444');
-            document.documentElement.style.setProperty('--card-bg', 'rgba(45, 45, 45, 0.9)');
-            document.documentElement.style.setProperty('--hover-bg', 'rgba(255, 255, 255, 0.1)');
-        } else {
-            document.documentElement.style.setProperty('--text-primary', '#000000');
-            document.documentElement.style.setProperty('--text-secondary', '#333333');
-            document.documentElement.style.setProperty('--text-accent', '#1a5f9e');
-            document.documentElement.style.setProperty('--bg-primary', '#ffffff');
-            document.documentElement.style.setProperty('--bg-secondary', '#f0f2f6');
-            document.documentElement.style.setProperty('--border-color', '#dddddd');
-            document.documentElement.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.9)');
-            document.documentElement.style.setProperty('--hover-bg', 'rgba(0, 0, 0, 0.05)');
-        }
-    }
-    
-    // Initial detection
-    detectTheme();
-    
-    // Listen for theme changes
-    window.matchMedia('(prefers-color-scheme: dark)').addListener(detectTheme);
-    window.matchMedia('(prefers-color-scheme: light)').addListener(detectTheme);
-    
     // Create enhanced animated background particles
     function createParticles() {
         const container = document.getElementById('particles');
-        if (!container) return;
-        
         const particleCount = 25;
         
         for (let i = 0; i < particleCount; i++) {
@@ -769,10 +554,10 @@ st.markdown("""
         }
     }
     
+    createParticles();
+    
     // Smooth scroll and transition enhancements
     document.addEventListener('DOMContentLoaded', function() {
-        createParticles();
-        
         // Add smooth fade-in for all content
         const elements = document.querySelectorAll('.stat-card, .location-info-box');
         elements.forEach((el, index) => {
@@ -786,8 +571,6 @@ st.markdown("""
         });
     });
 </script>
-
-<div class="particles" id="particles"></div>
 """, unsafe_allow_html=True)
 
 # ---- Enhanced Session State ----
@@ -1889,9 +1672,9 @@ def show_my_location():
     with col1:
         # Location information display
         st.markdown(f"""
-        <div style="background: var(--card-bg); border-radius: 15px; padding: 2rem; margin: 1rem 0; border: 1px solid var(--border-color);">
+        <div style="background: rgba(255,255,255,0.1); border-radius: 15px; padding: 2rem; margin: 1rem 0;">
             <div style="text-align: center;">
-                <div style="font-size: 1.2rem; opacity: 0.8; color: var(--text-secondary);">Coordinates</div>
+                <div style="font-size: 1.2rem; opacity: 0.8;">Coordinates</div>
                 <div class="location-coordinates">
                     {st.session_state.location['lat']:.6f}<br>
                     {st.session_state.location['lng']:.6f}
@@ -1915,9 +1698,9 @@ def show_my_location():
         if location_history:
             for entry in location_history[:5]:  # Show last 5 entries
                 st.markdown(f"""
-                <div style="background: var(--card-bg); border-radius: 10px; padding: 0.8rem; margin: 0.5rem 0; border: 1px solid var(--border-color);">
-                    <div style="font-family: monospace; color: var(--text-primary);">📍 {entry['lat']:.6f}, {entry['lng']:.6f}</div>
-                    <div style="font-size: 0.8rem; opacity: 0.7; color: var(--text-secondary);">🕐 {entry['timestamp']} via {entry['source'].replace('_', ' ').title()}</div>
+                <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 0.8rem; margin: 0.5rem 0;">
+                    <div style="font-family: monospace;">📍 {entry['lat']:.6f}, {entry['lng']:.6f}</div>
+                    <div style="font-size: 0.8rem; opacity: 0.7;">🕐 {entry['timestamp']} via {entry['source'].replace('_', ' ').title()}</div>
                 </div>
                 """, unsafe_allow_html=True)
         else:
@@ -1960,8 +1743,8 @@ def show_my_location():
         st.markdown(f"""
         <div style="margin-top: 2rem;">
             <a href="https://www.google.com/maps?q={st.session_state.location['lat']},{st.session_state.location['lng']}" 
-               target="_blank" style="display: block; text-align: center; background: var(--card-bg); 
-               color: var(--text-primary); padding: 1rem; border-radius: 10px; text-decoration: none; border: 1px solid var(--border-color);">
+               target="_blank" style="display: block; text-align: center; background: linear-gradient(135deg, #667eea, #764ba2); 
+               color: white; padding: 1rem; border-radius: 10px; text-decoration: none;">
                 📍 Open in Google Maps
             </a>
         </div>
@@ -2032,15 +1815,15 @@ def show_live_tracking():
     
     # Map legend
     st.markdown("""
-    <div style="background: var(--card-bg); padding: 1rem; border-radius: 10px; margin: 1rem 0; border: 1px solid var(--border-color);">
-        <h4 style="color: var(--text-accent);">📍 Map Legend</h4>
+    <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 10px; margin: 1rem 0;">
+        <h4>📍 Map Legend</h4>
         <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
-            <div style="color: var(--text-primary);"><span style="color: green;">🟢</span> Active User (recent location)</div>
-            <div style="color: var(--text-primary);"><span style="color: orange;">🟡</span> Active User (stale location)</div>
-            <div style="color: var(--text-primary);"><span style="color: red;">🔴</span> Emergency Active</div>
-            <div style="color: var(--text-primary);"><span style="color: gray;">⚪</span> Inactive User</div>
-            <div style="color: var(--text-primary);"><span>📍</span> Click on markers for details</div>
-            <div style="color: var(--text-primary);"><span>🗺️</span> Switch map layers using top-right control</div>
+            <div><span style="color: green;">🟢</span> Active User (recent location)</div>
+            <div><span style="color: orange;">🟡</span> Active User (stale location)</div>
+            <div><span style="color: red;">🔴</span> Emergency Active</div>
+            <div><span style="color: gray;">⚪</span> Inactive User</div>
+            <div><span>📍</span> Click on markers for details</div>
+            <div><span>🗺️</span> Switch map layers using top-right control</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -2750,7 +2533,7 @@ else:
 
 # ---- Footer ----
 st.markdown("""
-    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+    <div style="text-align: center; padding: 2rem; color: white; opacity: 0.7;">
         SafeTap &copy; 2024 | Guardian Innovators<br>
         One Tap Can Save a Life | Enhanced Emergency Response System
     </div>
