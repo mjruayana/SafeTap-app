@@ -40,91 +40,63 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ---- Enhanced Custom CSS with Consistent Color Scheme and Improved Text Contrast ----
+# ---- Enhanced Custom CSS with Theme-Aware Text Visibility ----
 st.markdown("""
 <style>
-    /* Consistent Blue/Purple Gradient Background */
+    /* Theme detection and automatic color adaptation */
+    @media (prefers-color-scheme: light) {
+        :root {
+            --text-primary: #000000 !important;
+            --text-secondary: #333333 !important;
+            --text-accent: #1a5f9e !important;
+            --bg-primary: #ffffff !important;
+            --bg-secondary: #f0f2f6 !important;
+            --border-color: #dddddd !important;
+            --card-bg: rgba(255, 255, 255, 0.9) !important;
+            --hover-bg: rgba(0, 0, 0, 0.05) !important;
+        }
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --text-primary: #ffffff !important;
+            --text-secondary: #cccccc !important;
+            --text-accent: #ffeb3b !important;
+            --bg-primary: #1a1a1a !important;
+            --bg-secondary: #2d2d2d !important;
+            --border-color: #444444 !important;
+            --card-bg: rgba(45, 45, 45, 0.9) !important;
+            --hover-bg: rgba(255, 255, 255, 0.1) !important;
+        }
+    }
+    
+    /* Main background that adapts to theme */
     .main {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
         background-size: 400% 400%;
         animation: gradientShift 15s ease infinite;
-        color: #ffffff !important;
         min-height: 100vh;
     }
     
-    /* Force all text to be white or light-colored for visibility */
-    .main * {
+    /* Dynamic text colors for all elements outside safe-header */
+    .main :not(.safe-header):not(.safe-header *) {
+        color: var(--text-primary) !important;
+        transition: color 0.3s ease;
+    }
+    
+    /* Override for specific elements that need different colors */
+    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, 
+    .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown li,
+    .stMarkdown span, .stMarkdown div {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Keep safe-header text white as original */
+    .safe-header,
+    .safe-header h1,
+    .safe-header p,
+    .safe-header * {
         color: #ffffff !important;
-    }
-    
-    /* Override for input fields and select boxes to maintain readability */
-    .stTextInput input, .stTextArea textarea, .stSelectbox select, .stMultiSelect div {
-        color: #000000 !important;
-        background-color: #ffffff !important;
-    }
-    
-    /* Ensure placeholder text is visible */
-    .stTextInput input::placeholder, .stTextArea textarea::placeholder {
-        color: #666666 !important;
-        opacity: 1;
-    }
-    
-    /* Style for select box options */
-    .stSelectbox div[data-baseweb="select"] span {
-        color: #000000 !important;
-    }
-    
-    /* Style for dropdown menus */
-    div[data-baseweb="popover"] div {
-        color: #000000 !important;
-    }
-    
-    /* Style for success/warning/info/error messages */
-    .stAlert {
-        color: #000000 !important;
-    }
-    
-    .stAlert * {
-        color: #000000 !important;
-    }
-    
-    /* Style for metric labels and values */
-    [data-testid="stMetricLabel"] p, [data-testid="stMetricValue"] {
-        color: #ffffff !important;
-    }
-    
-    /* Style for tabs */
-    .stTabs [data-baseweb="tab-list"] button p {
-        color: #ffffff !important;
-    }
-    
-    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] p {
-        color: #ffeb3b !important;
-        font-weight: bold;
-    }
-    
-    /* Style for expander */
-    .streamlit-expanderHeader {
-        color: #ffffff !important;
-    }
-    
-    /* Style for radio buttons and checkboxes */
-    .stRadio label, .stCheckbox label {
-        color: #ffffff !important;
-    }
-    
-    /* Style for slider labels */
-    .stSlider label {
-        color: #ffffff !important;
-    }
-    
-    /* Style for dataframe */
-    .stDataFrame {
-        color: #000000 !important;
-    }
-    
-    .stDataFrame * {
-        color: #000000 !important;
     }
     
     @keyframes gradientShift {
@@ -164,11 +136,103 @@ st.markdown("""
         100% { transform: translateY(-100px) rotate(360deg) scale(0.5); opacity: 0; }
     }
     
-    /* Enhanced Sidebar */
-    .css-1d391kg, .css-1lcbmhc {
-        background: linear-gradient(180deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+    /* Input fields - maintain contrast in both modes */
+    .stTextInput input, .stTextArea textarea, .stSelectbox select, .stMultiSelect div {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+        border: 1px solid var(--border-color) !important;
+    }
+    
+    /* Placeholder text */
+    .stTextInput input::placeholder, .stTextArea textarea::placeholder {
+        color: #666666 !important;
+        opacity: 1;
+    }
+    
+    /* Select box options */
+    .stSelectbox div[data-baseweb="select"] span {
+        color: #000000 !important;
+    }
+    
+    /* Dropdown menus */
+    div[data-baseweb="popover"] div {
+        color: #000000 !important;
+    }
+    
+    /* Alert messages - maintain readability */
+    .stAlert {
+        background: var(--card-bg) !important;
+        border: 1px solid var(--border-color) !important;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stAlert * {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Metric labels and values */
+    [data-testid="stMetricLabel"] p {
+        color: var(--text-secondary) !important;
+    }
+    
+    [data-testid="stMetricValue"] {
+        color: var(--text-accent) !important;
+    }
+    
+    [data-testid="stMetricDelta"] {
+        color: var(--text-secondary) !important;
+    }
+    
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] button p {
+        color: var(--text-secondary) !important;
+    }
+    
+    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] p {
+        color: var(--text-accent) !important;
+        font-weight: bold;
+    }
+    
+    /* Expander */
+    .streamlit-expanderHeader {
+        color: var(--text-primary) !important;
+        background: var(--card-bg) !important;
+    }
+    
+    /* Radio buttons and checkboxes */
+    .stRadio label, .stCheckbox label {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Slider labels */
+    .stSlider label {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Dataframe - maintain readability */
+    .stDataFrame {
+        color: #000000 !important;
+    }
+    
+    .stDataFrame * {
+        color: #000000 !important;
+    }
+    
+    /* Plotly charts - ensure text visibility */
+    .js-plotly-plot .plotly {
+        background: transparent !important;
+    }
+    
+    /* Sidebar - adapt to theme */
+    .css-1d391kg, .css-1lcbmhc, [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
         backdrop-filter: blur(10px);
         border-right: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    /* Sidebar text colors */
+    [data-testid="stSidebar"] * {
+        color: #ffffff !important;
     }
     
     .sidebar .sidebar-content {
@@ -176,10 +240,10 @@ st.markdown("""
     }
     
     [data-testid="stSidebarNav"] {
-        background: linear-gradient(180deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+        background: linear-gradient(180deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
     }
     
-    /* Sidebar button styling */
+    /* Sidebar buttons */
     .stSidebar button {
         background: rgba(255,255,255,0.1) !important;
         color: #ffffff !important;
@@ -195,6 +259,7 @@ st.markdown("""
         color: #ffffff !important;
     }
     
+    /* Sidebar sections */
     .sidebar-section {
         padding: 15px 20px;
         margin: 10px 0;
@@ -243,7 +308,7 @@ st.markdown("""
         color: rgba(255,255,255,0.9) !important;
     }
     
-    /* Enhanced Sidebar User Info */
+    /* Sidebar User Info */
     .sidebar-user-info {
         background: rgba(255,255,255,0.1);
         border-radius: 15px;
@@ -277,7 +342,7 @@ st.markdown("""
         color: #ffeb3b !important;
     }
     
-    /* Emergency Type Selector in Sidebar */
+    /* Emergency Type Selector */
     .emergency-type-section {
         background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
         border-radius: 15px;
@@ -333,7 +398,7 @@ st.markdown("""
         color: #ffffff !important;
     }
     
-    /* Enhanced Header - Consistent Blue/Purple */
+    /* Safe Header - keep original white text */
     .safe-header {
         background: linear-gradient(135deg, #667eea, #764ba2);
         backdrop-filter: blur(15px);
@@ -370,7 +435,7 @@ st.markdown("""
         100% { transform: rotate(45deg) translateX(100%); }
     }
     
-    /* Circular Emergency Alert Button - Icon Only */
+    /* Circular Emergency Alert Button */
     .emergency-alert-button {
         width: 240px;
         height: 240px;
@@ -458,7 +523,7 @@ st.markdown("""
         display: none !important;
     }
     
-    /* Enhanced Stats Cards */
+    /* Stats Cards - with theme-aware colors */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -467,44 +532,44 @@ st.markdown("""
     }
     
     .stat-card {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.25), rgba(118, 75, 162, 0.25));
+        background: var(--card-bg);
         border-radius: 15px;
         padding: 1.2rem;
         text-align: center;
-        border: 1px solid rgba(255,255,255,0.15);
+        border: 1px solid var(--border-color);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         backdrop-filter: blur(10px);
     }
     
     .stat-card:hover {
         transform: translateY(-8px) scale(1.03);
-        box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.35), rgba(118, 75, 162, 0.35));
+        box-shadow: 0 15px 35px var(--border-color);
+        background: var(--card-bg);
     }
     
     .stat-icon {
-        color: #ffffff !important;
+        color: var(--text-accent) !important;
         font-size: 2rem;
     }
     
     .stat-value {
         font-size: 1.6rem;
         font-weight: bold;
-        color: #ffeb3b !important;
+        color: var(--text-accent) !important;
         margin: 0.5rem 0;
         text-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
     
     .stat-label {
         font-size: 0.9rem;
-        color: rgba(255,255,255,0.9) !important;
+        color: var(--text-secondary) !important;
         margin-bottom: 0.5rem;
     }
     
     .stat-change {
         font-size: 0.8rem;
         font-weight: bold;
-        color: rgba(255,255,255,0.8) !important;
+        color: var(--text-secondary) !important;
     }
     
     .change-positive {
@@ -512,7 +577,7 @@ st.markdown("""
     }
     
     .change-neutral {
-        color: #ffeb3b !important;
+        color: var(--text-accent) !important;
     }
     
     /* Dashboard Container */
@@ -521,7 +586,7 @@ st.markdown("""
     }
     
     .dashboard-title {
-        color: #ffeb3b !important;
+        color: var(--text-accent) !important;
         font-size: 1.5rem;
         font-weight: bold;
         margin-bottom: 1rem;
@@ -558,187 +623,131 @@ st.markdown("""
             font-size: 3.5rem;
         }
     }
-
-    /* Fix for Streamlit elements - ensure text visibility */
-    .stButton button {
-        width: 100%;
-        color: #ffffff !important;
-    }
     
-    .stMarkdown {
-        color: #ffffff !important;
-    }
-    
-    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
-        color: #ffffff !important;
-    }
-    
-    /* Fix for form elements */
-    .stTextInput label, .stTextArea label, .stSelectbox label, .stNumberInput label {
-        color: #ffffff !important;
-        font-weight: 500;
-    }
-    
-    .stTextInput input, .stTextArea textarea {
-        background: rgba(255,255,255,0.9) !important;
-        color: #000000 !important;
-        border: 1px solid rgba(255,255,255,0.3) !important;
-    }
-    
-    .stSelectbox select {
-        background: rgba(255,255,255,0.9) !important;
-        color: #000000 !important;
-    }
-    
-    .stSelectbox div[data-baseweb="select"] {
-        background: rgba(255,255,255,0.9) !important;
-    }
-    
-    /* Fix progress bar */
-    .stProgress > div > div > div {
-        background-color: #ffeb3b !important;
-    }
-    
-    /* Map container styling */
+    /* Map container */
     .map-container {
-        border: 2px solid rgba(255,255,255,0.2);
+        border: 2px solid var(--border-color);
         border-radius: 15px;
         overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        box-shadow: 0 10px 30px var(--border-color);
         margin: 1rem 0;
     }
     
-    /* Info boxes for location display */
+    /* Location info boxes */
     .location-info-box {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+        background: var(--card-bg);
         border-radius: 15px;
         padding: 2rem;
         text-align: center;
-        border: 2px solid rgba(255,235,59,0.3);
+        border: 2px solid var(--border-color);
         backdrop-filter: blur(10px);
         margin: 1rem 0;
     }
     
     .location-info-box h2 {
-        color: #ffffff !important;
+        color: var(--text-accent) !important;
     }
     
     .location-coordinates {
         font-size: 1.5rem;
         font-weight: bold;
-        color: #ffeb3b !important;
+        color: var(--text-accent) !important;
         margin: 1rem 0;
         font-family: monospace;
     }
     
     .location-accuracy {
         font-size: 1rem;
-        color: rgba(255,255,255,0.9) !important;
+        color: var(--text-secondary) !important;
         margin: 0.5rem 0;
     }
     
     .location-timestamp {
         font-size: 0.9rem;
-        color: rgba(255,255,255,0.7) !important;
+        color: var(--text-secondary) !important;
         margin-top: 1rem;
         font-style: italic;
     }
     
-    /* Style for info/warning/success/error boxes */
-    .stAlert {
-        background: rgba(255,255,255,0.1) !important;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.2) !important;
-    }
-    
-    /* Style for metric cards */
-    [data-testid="stMetric"] {
-        background: rgba(255,255,255,0.1);
-        border-radius: 10px;
-        padding: 1rem;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.2);
-    }
-    
-    [data-testid="stMetricLabel"] p {
-        color: rgba(255,255,255,0.9) !important;
-    }
-    
-    [data-testid="stMetricValue"] {
-        color: #ffeb3b !important;
-    }
-    
-    [data-testid="stMetricDelta"] {
-        color: rgba(255,255,255,0.7) !important;
-    }
-    
-    /* Style for expander */
-    .streamlit-expanderHeader {
-        background: rgba(255,255,255,0.1) !important;
-        border-radius: 10px !important;
-        color: #ffffff !important;
-    }
-    
-    /* Style for radio buttons */
-    .stRadio div[role="radiogroup"] {
-        color: #ffffff !important;
-    }
-    
-    .stRadio label {
-        color: #ffffff !important;
-    }
-    
-    /* Style for checkbox */
-    .stCheckbox label {
-        color: #ffffff !important;
-    }
-    
-    /* Style for slider */
-    .stSlider label {
-        color: #ffffff !important;
-    }
-    
-    /* Style for tabs */
-    .stTabs button p {
-        color: #ffffff !important;
-    }
-    
-    .stTabs button[aria-selected="true"] p {
-        color: #ffeb3b !important;
-    }
-    
-    /* Style for dataframe */
-    .stDataFrame {
-        color: #000000 !important;
-    }
-    
-    .stDataFrame * {
-        color: #000000 !important;
-    }
-    
-    /* Style for plotly charts */
-    .js-plotly-plot .plotly {
-        background: transparent !important;
-    }
-    
-    /* Style for download button */
+    /* Download button */
     .stDownloadButton button {
-        background: linear-gradient(135deg, #667eea, #764ba2) !important;
-        color: #ffffff !important;
-        border: 1px solid rgba(255,255,255,0.2) !important;
+        background: var(--card-bg) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border-color) !important;
     }
     
     .stDownloadButton button:hover {
-        background: linear-gradient(135deg, #764ba2, #667eea) !important;
-        border-color: #ffeb3b !important;
+        background: var(--hover-bg) !important;
+        border-color: var(--text-accent) !important;
+    }
+    
+    /* Progress bar */
+    .stProgress > div > div > div {
+        background-color: var(--text-accent) !important;
+    }
+    
+    /* Form labels */
+    .stTextInput label, .stTextArea label, .stSelectbox label, .stNumberInput label {
+        color: var(--text-primary) !important;
+        font-weight: 500;
+    }
+    
+    /* Info boxes */
+    .stInfo, .stSuccess, .stWarning, .stError {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Captions and helper text */
+    .stCaption, small, .small {
+        color: var(--text-secondary) !important;
+    }
+    
+    /* Headers outside safe-header */
+    h1:not(.safe-header h1), h2:not(.safe-header h2), h3:not(.safe-header h3), 
+    h4:not(.safe-header h4), h5:not(.safe-header h5), h6:not(.safe-header h6) {
+        color: var(--text-primary) !important;
     }
 </style>
 
-<div class="particles" id="particles"></div>
 <script>
+    // Theme detection
+    function detectTheme() {
+        const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isLightMode = window.matchMedia('(prefers-color-scheme: light)').matches;
+        
+        if (isDarkMode) {
+            document.documentElement.style.setProperty('--text-primary', '#ffffff');
+            document.documentElement.style.setProperty('--text-secondary', '#cccccc');
+            document.documentElement.style.setProperty('--text-accent', '#ffeb3b');
+            document.documentElement.style.setProperty('--bg-primary', '#1a1a1a');
+            document.documentElement.style.setProperty('--bg-secondary', '#2d2d2d');
+            document.documentElement.style.setProperty('--border-color', '#444444');
+            document.documentElement.style.setProperty('--card-bg', 'rgba(45, 45, 45, 0.9)');
+            document.documentElement.style.setProperty('--hover-bg', 'rgba(255, 255, 255, 0.1)');
+        } else {
+            document.documentElement.style.setProperty('--text-primary', '#000000');
+            document.documentElement.style.setProperty('--text-secondary', '#333333');
+            document.documentElement.style.setProperty('--text-accent', '#1a5f9e');
+            document.documentElement.style.setProperty('--bg-primary', '#ffffff');
+            document.documentElement.style.setProperty('--bg-secondary', '#f0f2f6');
+            document.documentElement.style.setProperty('--border-color', '#dddddd');
+            document.documentElement.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.9)');
+            document.documentElement.style.setProperty('--hover-bg', 'rgba(0, 0, 0, 0.05)');
+        }
+    }
+    
+    // Initial detection
+    detectTheme();
+    
+    // Listen for theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addListener(detectTheme);
+    window.matchMedia('(prefers-color-scheme: light)').addListener(detectTheme);
+    
     // Create enhanced animated background particles
     function createParticles() {
         const container = document.getElementById('particles');
+        if (!container) return;
+        
         const particleCount = 25;
         
         for (let i = 0; i < particleCount; i++) {
@@ -764,10 +773,10 @@ st.markdown("""
         }
     }
     
-    createParticles();
-    
     // Smooth scroll and transition enhancements
     document.addEventListener('DOMContentLoaded', function() {
+        createParticles();
+        
         // Add smooth fade-in for all content
         const elements = document.querySelectorAll('.stat-card, .location-info-box');
         elements.forEach((el, index) => {
@@ -781,6 +790,8 @@ st.markdown("""
         });
     });
 </script>
+
+<div class="particles" id="particles"></div>
 """, unsafe_allow_html=True)
 
 # ---- Enhanced Session State ----
@@ -1508,7 +1519,7 @@ def show_sidebar():
             st.markdown(f"""
             <div class="sidebar-user-info">
                 <div style="text-align: center; margin-bottom: 1rem;">
-                    <h4 style="margin: 0; color: #ffffff;">👋 {role_text}</h4>
+                    <h4 style="margin: 0;">👋 {role_text}</h4>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -1873,7 +1884,7 @@ def show_my_location():
     # Display location in a styled info box (no map)
     st.markdown("""
     <div class="location-info-box">
-        <h2 style="margin:0; color: #ffeb3b;">📍 Current Location</h2>
+        <h2 style="margin:0;">📍 Current Location</h2>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1882,9 +1893,9 @@ def show_my_location():
     with col1:
         # Location information display
         st.markdown(f"""
-        <div style="background: rgba(255,255,255,0.1); border-radius: 15px; padding: 2rem; margin: 1rem 0;">
+        <div style="background: var(--card-bg); border-radius: 15px; padding: 2rem; margin: 1rem 0; border: 1px solid var(--border-color);">
             <div style="text-align: center;">
-                <div style="font-size: 1.2rem; opacity: 0.8; color: #ffffff;">Coordinates</div>
+                <div style="font-size: 1.2rem; opacity: 0.8; color: var(--text-secondary);">Coordinates</div>
                 <div class="location-coordinates">
                     {st.session_state.location['lat']:.6f}<br>
                     {st.session_state.location['lng']:.6f}
@@ -1908,9 +1919,9 @@ def show_my_location():
         if location_history:
             for entry in location_history[:5]:  # Show last 5 entries
                 st.markdown(f"""
-                <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 0.8rem; margin: 0.5rem 0;">
-                    <div style="font-family: monospace; color: #ffffff;">📍 {entry['lat']:.6f}, {entry['lng']:.6f}</div>
-                    <div style="font-size: 0.8rem; opacity: 0.7; color: rgba(255,255,255,0.7);">🕐 {entry['timestamp']} via {entry['source'].replace('_', ' ').title()}</div>
+                <div style="background: var(--card-bg); border-radius: 10px; padding: 0.8rem; margin: 0.5rem 0; border: 1px solid var(--border-color);">
+                    <div style="font-family: monospace; color: var(--text-primary);">📍 {entry['lat']:.6f}, {entry['lng']:.6f}</div>
+                    <div style="font-size: 0.8rem; opacity: 0.7; color: var(--text-secondary);">🕐 {entry['timestamp']} via {entry['source'].replace('_', ' ').title()}</div>
                 </div>
                 """, unsafe_allow_html=True)
         else:
@@ -1953,8 +1964,8 @@ def show_my_location():
         st.markdown(f"""
         <div style="margin-top: 2rem;">
             <a href="https://www.google.com/maps?q={st.session_state.location['lat']},{st.session_state.location['lng']}" 
-               target="_blank" style="display: block; text-align: center; background: linear-gradient(135deg, #667eea, #764ba2); 
-               color: white; padding: 1rem; border-radius: 10px; text-decoration: none;">
+               target="_blank" style="display: block; text-align: center; background: var(--card-bg); 
+               color: var(--text-primary); padding: 1rem; border-radius: 10px; text-decoration: none; border: 1px solid var(--border-color);">
                 📍 Open in Google Maps
             </a>
         </div>
@@ -2025,15 +2036,15 @@ def show_live_tracking():
     
     # Map legend
     st.markdown("""
-    <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 10px; margin: 1rem 0;">
-        <h4 style="color: #ffffff;">📍 Map Legend</h4>
+    <div style="background: var(--card-bg); padding: 1rem; border-radius: 10px; margin: 1rem 0; border: 1px solid var(--border-color);">
+        <h4 style="color: var(--text-accent);">📍 Map Legend</h4>
         <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
-            <div style="color: #ffffff;"><span style="color: green;">🟢</span> Active User (recent location)</div>
-            <div style="color: #ffffff;"><span style="color: orange;">🟡</span> Active User (stale location)</div>
-            <div style="color: #ffffff;"><span style="color: red;">🔴</span> Emergency Active</div>
-            <div style="color: #ffffff;"><span style="color: gray;">⚪</span> Inactive User</div>
-            <div style="color: #ffffff;"><span>📍</span> Click on markers for details</div>
-            <div style="color: #ffffff;"><span>🗺️</span> Switch map layers using top-right control</div>
+            <div style="color: var(--text-primary);"><span style="color: green;">🟢</span> Active User (recent location)</div>
+            <div style="color: var(--text-primary);"><span style="color: orange;">🟡</span> Active User (stale location)</div>
+            <div style="color: var(--text-primary);"><span style="color: red;">🔴</span> Emergency Active</div>
+            <div style="color: var(--text-primary);"><span style="color: gray;">⚪</span> Inactive User</div>
+            <div style="color: var(--text-primary);"><span>📍</span> Click on markers for details</div>
+            <div style="color: var(--text-primary);"><span>🗺️</span> Switch map layers using top-right control</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -2743,7 +2754,7 @@ else:
 
 # ---- Footer ----
 st.markdown("""
-    <div style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.7);">
+    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
         SafeTap &copy; 2024 | Guardian Innovators<br>
         One Tap Can Save a Life | Enhanced Emergency Response System
     </div>
