@@ -70,7 +70,7 @@ st.markdown("""
         }
     }
     
-    /* Main background that adapts to theme */
+    /* Main background with gradient */
     .main {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
         background-size: 400% 400%;
@@ -78,10 +78,16 @@ st.markdown("""
         min-height: 100vh;
     }
     
-    /* Dynamic text colors for all elements outside safe-header */
-    .main :not(.safe-header):not(.safe-header *) {
+    /* Dynamic text colors for all elements */
+    .main * {
         color: var(--text-primary) !important;
         transition: color 0.3s ease;
+    }
+    
+    /* Safe Header - always white text */
+    .safe-header,
+    .safe-header * {
+        color: #ffffff !important;
     }
     
     /* Override for specific elements that need different colors */
@@ -89,14 +95,6 @@ st.markdown("""
     .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown li,
     .stMarkdown span, .stMarkdown div {
         color: var(--text-primary) !important;
-    }
-    
-    /* Keep safe-header text white as original */
-    .safe-header,
-    .safe-header h1,
-    .safe-header p,
-    .safe-header * {
-        color: #ffffff !important;
     }
     
     @keyframes gradientShift {
@@ -223,14 +221,14 @@ st.markdown("""
         background: transparent !important;
     }
     
-    /* Sidebar - adapt to theme */
+    /* Sidebar - keep consistent */
     .css-1d391kg, .css-1lcbmhc, [data-testid="stSidebar"] {
         background: linear-gradient(180deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
         backdrop-filter: blur(10px);
         border-right: 1px solid rgba(255,255,255,0.2);
     }
     
-    /* Sidebar text colors */
+    /* Sidebar text colors - always white for contrast */
     [data-testid="stSidebar"] * {
         color: #ffffff !important;
     }
@@ -398,11 +396,10 @@ st.markdown("""
         color: #ffffff !important;
     }
     
-    /* Safe Header - keep original white text */
+    /* Safe Header - always white text */
     .safe-header {
         background: linear-gradient(135deg, #667eea, #764ba2);
         backdrop-filter: blur(15px);
-        color: #ffffff !important;
         border-radius: 0 0 25px 25px;
         box-shadow: 0 15px 50px rgba(0,0,0,0.3);
         padding: 3rem 0 2rem 0;
@@ -702,7 +699,7 @@ st.markdown("""
         color: var(--text-secondary) !important;
     }
     
-    /* Headers outside safe-header */
+    /* Headers */
     h1:not(.safe-header h1), h2:not(.safe-header h2), h3:not(.safe-header h3), 
     h4:not(.safe-header h4), h5:not(.safe-header h5), h6:not(.safe-header h6) {
         color: var(--text-primary) !important;
@@ -710,10 +707,9 @@ st.markdown("""
 </style>
 
 <script>
-    // Theme detection
+    // Theme detection and application
     function detectTheme() {
         const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const isLightMode = window.matchMedia('(prefers-color-scheme: light)').matches;
         
         if (isDarkMode) {
             document.documentElement.style.setProperty('--text-primary', '#ffffff');
