@@ -2103,6 +2103,12 @@ def show_user_management():
                         st.success(f"✅ {message}")
                     else:
                         st.error(f"❌ {message}")
+                        # If user already exists, direct them to login tab
+                        if "already exists" in message:
+                            st.info("👤 This username already exists. Please login instead.")
+                            st.session_state.view = "login"
+                            time.sleep(2)
+                            st.rerun()
                 else:
                     st.error("❌ Please fill in all required fields")
     
@@ -2491,6 +2497,13 @@ def show_login():
                                 st.rerun()
                             else:
                                 st.error(f"❌ {message}")
+                                # If user already exists, direct them to login tab
+                                if "already exists" in message:
+                                    st.info("👤 This username already exists. Please login instead.")
+                                    # Switch to login tab
+                                    st.session_state.view = "login"
+                                    time.sleep(2)
+                                    st.rerun()
                         else:
                             st.error("❌ Passwords do not match")
                     else:
