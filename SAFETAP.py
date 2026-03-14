@@ -1218,13 +1218,6 @@ def create_live_tracking_map():
     # Add layer control
     folium.LayerControl(position='topright').add_to(m)
     
-    # Add search feature
-    folium.plugins.Search(
-        layer=m,
-        search_label='name',
-        position='topleft'
-    ).add_to(m)
-    
     return m
 
 def get_active_emergencies():
